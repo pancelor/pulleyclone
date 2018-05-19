@@ -1,0 +1,182 @@
+<HTML>
+	<HEAD>
+	<Title>"2-2"</TITLE>
+	<!-- ALL functions and
+		all classes either imported-
+		or implented Here-->
+	<script src="drawing.js"></script>
+	<script src="hero.js"></script>
+	<script>
+
+		(function() {
+		  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+		    window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+		  window.requestAnimationFrame = requestAnimationFrame;
+		})();
+
+		//event listener
+		window.addEventListener("keydown", onKeyDown, false);
+		window.addEventListener("keyup", onKeyUp, false);
+
+		function onKeyDown(event) {
+		  var keyCode = event.keyCode;
+		  switch (keyCode) {
+		    case 68: //d
+		      keyD = true;
+		      break;
+		    case 83: //s
+		      keyS = true;
+		      break;
+		    case 65: //a
+		      keyA = true;
+		      break;
+		    case 87: //w
+		      keyW = true;
+		      break;
+		  }
+		}
+
+		function onKeyUp(event) {
+		  var keyCode = event.keyCode;
+
+		  switch (keyCode) {
+		    case 68: //d
+		      keyD = false;
+		      break;
+		    case 83: //s
+		      keyS = false;
+		      break;
+		    case 65: //a
+		      keyA = false;
+		      break;
+		    case 87: //w
+		      keyW = false;
+		      break;
+		  }
+		}
+
+		function drawStuff() {
+		  window.requestAnimationFrame(drawStuff);
+		  var canvas = document.getElementById("myCanvas");
+		  var c = canvas.getContext("2d");
+
+		  myDrawing.drawBackground();
+		  myDrawing.drawMap(tickX,tickY);
+		  //c.clearRect(0, 0, 800, 800);
+		  //c.fillStyle = "blue";
+		  //c.fillRect(tickX, tickY, 100, 100);
+
+		  if (keyD == true) {
+		    tickX += 64;
+		    heromove = "right";
+		    myDrawing.drawBackground();
+		  }
+		  if (keyS == true) {
+		    tickY += 64;
+		    heromove = "down";
+		    myDrawing.drawBackground();
+		  }
+		  if (keyA == true) {
+		    tickX -= 64;
+		    heromove = "left";
+		    myDrawing.drawBackground();
+		  }
+		  if (keyW == true) {
+		    tickY -=64;
+		    heromove = "up"
+		    //myHero.move("up");
+		    myDrawing.drawBackground();
+		  }
+		}
+		var hposx = myHero.findPositionX();
+		var hposy = myHero.findPositionY();
+		window.requestAnimationFrame(drawStuff);
+
+		class main
+		{
+
+			constructor()
+			{
+
+			}
+
+		}
+
+		function button()
+			{
+				myDrawing.drawBackground();
+				myDrawing.drawMap();
+
+			}
+
+	</script>
+
+
+	</HEAD>
+	<BODY>
+
+		<IMG src="tree.png" alt="tree" style="display:none;" id="tree"/>
+		<IMG src="bricks.png" alt="brick" style="display:none;" id="brick"/>
+		<IMG src="mountains.png" alt="mountains" style="display:none;" id="mountains"/>
+		<IMG src="grass.png" alt="grass" style="display:none;" id="grass"/>
+		<IMG src="dirt.png" alt="dirt" style="display:none;" id="dirt"/>
+		<IMG src="potion.png" alt="potion" style="display:none;" id="potion"/>
+		<IMG src="slime.png" alt="slime" style="display:none;" id="slime"/>
+		<IMG src="hero.png" alt="hero" style="display:none;" id="hero"/>
+
+		<button type="button" id="myBtn" onclick="button()">Play!</button>
+		<br> <br>
+		<SECTION id="canvas">
+
+			<CANVAS width=700 height=700 id="myCanvas" style="border: 1px solid black; border-radius: 5px;">
+				Your Web-Browser does not support Canvas
+
+		</SECTION>
+		<section id="console">
+		</section>
+
+		<script>
+
+		var posX=0;
+		var posY=0;
+
+		var heromove = "none";
+
+		//neccessary variables
+		var tickX = 0;
+		var tickY = 0;
+
+		var keyW = false;
+		var keyA = false;
+		var keyS = false;
+		var keyD = false;
+
+		var mapArray=[
+			[7,4,4,4,4,4,4,4,4,4],
+			[0,0,0,0,0,0,0,6,2,2],
+			[2,0,2,2,0,2,2,0,3,3],
+			[2,0,0,0,6,0,0,0,2,5],
+			[3,3,0,0,2,3,3,3,3,0],
+			[3,3,0,0,0,0,0,0,0,0],
+			[2,5,0,0,3,0,2,2,2,2],
+			[2,2,2,2,2,6,0,0,0,2],
+			[3,3,0,0,0,0,0,0,5,3],
+			[3,3,3,3,3,3,3,3,3,3]
+		];
+
+		myDrawing = new drawing();
+		//drawTree();
+
+		var canvas = document.getElementById("myCanvas");
+		var ctx = canvas.getContext("2d");		//This is 2D drawing context for canvas
+
+		myHero = new hero();
+		var hposx = myHero.findPositionX();
+		var hposy = myHero.findPositionY();
+		var myConsole = document.getElementById("console");
+		myConsole.innerHTML += hposx + ", " + hposy;
+
+		</script>
+
+	</BODY>
+</HTML>
