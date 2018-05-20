@@ -1,13 +1,13 @@
-const mapping = {
-    "0": "grass",
-    "1": "dirt",
-    "2": "tree",
-    "3": "brick",
-    "4": "mountains",
-    "5": "potion",
-    "6": "slime",
-    "7": "hero",
-}
+		const mapping = {
+		    0: "grass",
+		    1: "dirt",
+		    2: "tree",
+		    3: "brick",
+		    4: "mountains",
+		    5: "potion",
+		    6: "slime",
+		    7: "hero",
+		}
 
 class actor
 {

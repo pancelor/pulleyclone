@@ -4,7 +4,6 @@
 	<!-- ALL functions and
 		all classes either imported-
 		or implented Here-->
-	<script src="drawing.js"></script>
 	<script src="actor.js"></script>
 	<script>
 
@@ -33,11 +32,13 @@
 		          }
 		        }
 
-		function drawBackground(ctx)
+		function drawBackground(canvas, ctx)
 			{
-				ctx.fillStyle = ("#ffffff");
-				//Parematers are x,y, width and height
-				ctx.fillRect(0,0,800,800);
+				const img = document.getElementById("grass");
+		    var ptrn = ctx.createPattern(img, 'repeat');
+		    ctx.fillStyle = ptrn;
+		    ctx.fillRect(0, 0, canvas.width, canvas.height);
+		    ctx.fillStyle = undefined;
 			}
 
 		function updateStuff(playerdX,playerdY) {
@@ -51,8 +52,8 @@
 		function drawStuff() {
 		  var c = document.getElementById("myCanvas");
 		  var ctx = c.getContext("2d");
-		  drawBackground(ctx);
-		  
+		  drawBackground(c, ctx);
+
 		  for (var i=0; i < allActors.length; i++){
 		  	allActors[i].draw(ctx);
 		  }
@@ -68,7 +69,10 @@
 
 			for (var i=0; i < mapArray.length; i++){
 				for (var j=0; j < mapArray[i].length; j++){
-					allActors.push(new actor(j, i, (mapArray[i][j]).toString()));
+					const type = mapArray[i][j];
+					if (type !== 0) {
+						allActors.push(new actor(j, i, type.toString()));
+					}
 				}
 			}
 
