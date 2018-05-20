@@ -49,6 +49,13 @@
 			}
 		}
 
+    function drawRectCentered(ctx, color, cx, cy, w, h) {
+      const x = cx - w/2;
+      const y = cy - h/2;
+      ctx.fillStyle = color;
+      ctx.fillRect(x,y,w,h)
+    }
+
 		function drawStuff() {
 		  var c = document.getElementById("myCanvas");
 		  var ctx = c.getContext("2d");
@@ -63,6 +70,8 @@
 		  for (var i=0; i < allPotions.length; i++){
 		  	allPotions[i].draw(ctx);
 		  }
+
+		  drawRectCentered(ctx, "#fff", 320, 320, 512, 64)
 
 		  window.requestAnimationFrame(drawStuff);
 		}
@@ -90,7 +99,7 @@
                 for (var j=0; j < mapArray[i].length; j++){
                     const type = mapping[mapArray[i][j]]
                     if (type == "tree" || type == "mountains" || type == "brick") {
-                        allObstacles.push(new obstacle(j, i, type));
+                        allObstacles.push(new actor(j, i, type));
                     }
                     if (type == "hero" || type == "slime") {
                         allActors.push(new actor(j, i, type));
