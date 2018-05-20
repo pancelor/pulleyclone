@@ -1,13 +1,7 @@
-		const mapping = {
-		    0: "grass",
-		    1: "dirt",
-		    2: "tree",
-		    3: "brick",
-		    4: "mountains",
-		    5: "potion",
-		    6: "slime",
-		    7: "hero",
-		}
+
+function cantmove(newX, newY, actor){
+	return (actor.x == newX) && (actor.y == newY);
+}
 
 class actor
 {
@@ -16,7 +10,8 @@ class actor
 	{
 		this.x = x;
 		this.y = y;
-		this.type = mapping[type];
+		this.type = type;
+		this.HP
 	}
 
 	draw(ctx)
@@ -27,28 +22,45 @@ class actor
 
 	update(playerdX,playerdY)
 	{
+		var newX = this.x;
+		var newY = this.y;
+
+		var canmove = true;
+
 		if (this.type == "hero")
 		{
 			if (playerdX == 1)
 			{
-				this.x += 1
-				console.log(this.x,this.y)
+				newX += 1;
 			}
 			if (playerdX == -1)
 			{
-				this.x += -1
-				console.log(this.x,this.y)
+				newX += -1;
 			}
 			if (playerdY == 1)
 			{
-				this.y += 1
-				console.log(this.x,this.y)
+				newY += 1;
 			}
 			if (playerdY == -1)
 			{
-				this.y += -1
-				console.log(this.x,this.y)
+				newY += -1;
 			}
+
+			for (var i=0; i < allObstacles.length; i++){
+				if (cantmove(newX,newY,allObstacles[i]))
+				{
+					canmove =  false;
+				}
+		  	}
+		  	
+
+		  	if (canmove == true){
+		  		this.x = newX;
+				this.y = newY;
+		  	}
+
+		  	console.log(this.x);
+			console.log(this.y);
 		}
 		else if (this.type == "slime")
 		{

@@ -35,10 +35,10 @@
 		function drawBackground(canvas, ctx)
 			{
 				const img = document.getElementById("grass");
-		    var ptrn = ctx.createPattern(img, 'repeat');
-		    ctx.fillStyle = ptrn;
-		    ctx.fillRect(0, 0, canvas.width, canvas.height);
-		    ctx.fillStyle = undefined;
+            	var ptrn = ctx.createPattern(img, 'repeat');
+	            ctx.fillStyle = ptrn;
+	            ctx.fillRect(0, 0, canvas.width, canvas.height);
+	            ctx.fillStyle = undefined;
 			}
 
 		function updateStuff(playerdX,playerdY) {
@@ -57,6 +57,12 @@
 		  for (var i=0; i < allActors.length; i++){
 		  	allActors[i].draw(ctx);
 		  }
+		  for (var i=0; i < allObstacles.length; i++){
+		  	allObstacles[i].draw(ctx);
+		  }
+		  for (var i=0; i < allPotions.length; i++){
+		  	allPotions[i].draw(ctx);
+		  }
 
 		  window.requestAnimationFrame(drawStuff);
 		}
@@ -65,16 +71,36 @@
 			// TODO: loop over mapArray and create an Actor for each tile.
 			// each actor will get it's `x`, `y`, and `sprite` variables set
 
+			const mapping = {
+		    0: "grass",
+		    1: "dirt",
+		    2: "tree",
+		    3: "brick",
+		    4: "mountains",
+		    5: "potion",
+		    6: "slime",
+		    7: "hero",
+			}
+
 			allActors = [];
+			allObstacles = [];
+			allPotions = [];
 
 			for (var i=0; i < mapArray.length; i++){
-				for (var j=0; j < mapArray[i].length; j++){
-					const type = mapArray[i][j];
-					if (type !== 0) {
-						allActors.push(new actor(j, i, type.toString()));
-					}
-				}
-			}
+                for (var j=0; j < mapArray[i].length; j++){
+                    const type = mapping[mapArray[i][j]]
+                    if (type == "tree" || type == "mountains" || type == "brick") {
+                        allObstacles.push(new obstacle(j, i, type));
+                    }
+                    if (type == "hero" || type == "slime") {
+                        allActors.push(new actor(j, i, type));
+                    }
+                    if (type == "potion") {
+                        allPotions.push(new actor(j, i, type));
+                    }
+                }
+            }
+
 
 			//console.log(allActors);
 			//console.log(allActors[20]);
@@ -104,7 +130,7 @@
 		<br> <br>
 		<SECTION id="canvas">
 
-			<CANVAS width=700 height=700 id="myCanvas" style="border: 1px solid black; border-radius: 5px;">
+			<CANVAS width=640 height=640 id="myCanvas" style="border: 1px solid black; border-radius: 5px;">
 				Your Web-Browser does not support Canvas
 
 		</SECTION>
@@ -115,15 +141,17 @@
 
 		//global variables
 		var allActors;
+		var allObstacles;
+		var allPotions;
 
 		var mapArray=[
-			[7,4,4,4,4,4,4,4,4,4],
-			[0,0,0,0,0,0,0,6,2,2],
+			[4,4,4,4,4,4,4,4,4,4],
+			[7,0,0,0,0,0,0,6,2,2],
 			[2,0,2,2,0,2,2,0,3,3],
 			[2,0,0,0,6,0,0,0,2,5],
 			[3,3,0,0,2,3,3,3,3,0],
 			[3,3,0,0,0,0,0,0,0,0],
-			[2,5,0,0,3,0,2,2,2,2],
+			[2,0,0,0,2,0,2,2,2,2],
 			[2,2,2,2,2,6,0,0,0,2],
 			[3,3,0,0,0,0,0,0,5,3],
 			[3,3,3,3,3,3,3,3,3,3]
