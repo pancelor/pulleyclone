@@ -15,6 +15,7 @@
 		})();
 
 		//event listener
+		window.addEventListener("keypress", console.log("hello"), false);
 		window.addEventListener("keydown", onKeyDown, false);
 		window.addEventListener("keyup", onKeyUp, false);
 
@@ -55,76 +56,40 @@
 		  }
 		}
 
+		function updateStuff() {
+			// TODO: loop over the all actors and call update() on each one.
+		}
+
 		function drawStuff() {
-		  window.requestAnimationFrame(drawStuff);
-		  var canvas = document.getElementById("myCanvas");
-		  var c = canvas.getContext("2d");
-
 		  myDrawing.drawBackground();
-		  myDrawing.drawMap(tickX,tickY);
-		  //c.clearRect(0, 0, 800, 800);
-		  //c.fillStyle = "blue";
-		  //c.fillRect(tickX, tickY, 100, 100);
-
-		  if (keyD == true) {
-		    tickX += 64;
-		    heromove = "right";
-		    myDrawing.drawBackground();
-		  }
-		  if (keyS == true) {
-		    tickY += 64;
-		    heromove = "down";
-		    myDrawing.drawBackground();
-		  }
-		  if (keyA == true) {
-		    tickX -= 64;
-		    heromove = "left";
-		    myDrawing.drawBackground();
-		  }
-		  if (keyW == true) {
-		    tickY -=64;
-		    heromove = "up"
-		    //myHero.move("up");
-		    myDrawing.drawBackground();
-		  }
-		}
-		var hposx = myHero.findPositionX();
-		var hposy = myHero.findPositionY();
-		window.requestAnimationFrame(drawStuff);
-
-		class main
-		{
-
-			constructor()
-			{
-
-			}
-
+		  myDrawing.drawMap();
+			window.requestAnimationFrame(drawStuff);
 		}
 
-		function button()
-			{
-				myDrawing.drawBackground();
-				myDrawing.drawMap();
+		window.onload(initGame)
 
-			}
+		function initGame() {
+			// TODO: loop over mapArray and create an Actor for each tile.
+			// each actor will get it's `x`, `y`, and `sprite` variables set
+			window.requestAnimationFrame(drawStuff);
+			setInterval(updateStuff, 33)
+		}
 
 	</script>
-
 
 	</HEAD>
 	<BODY>
 
-		<IMG src="tree.png" alt="tree" style="display:none;" id="tree"/>
-		<IMG src="bricks.png" alt="brick" style="display:none;" id="brick"/>
-		<IMG src="mountains.png" alt="mountains" style="display:none;" id="mountains"/>
 		<IMG src="grass.png" alt="grass" style="display:none;" id="grass"/>
 		<IMG src="dirt.png" alt="dirt" style="display:none;" id="dirt"/>
+		<IMG src="tree.png" alt="tree" style="display:none;" id="tree"/>
+		<IMG src="bricks.png" alt="brick" style="display:none;" id="bricks"/>
+		<IMG src="mountains.png" alt="mountains" style="display:none;" id="mountains"/>
 		<IMG src="potion.png" alt="potion" style="display:none;" id="potion"/>
 		<IMG src="slime.png" alt="slime" style="display:none;" id="slime"/>
 		<IMG src="hero.png" alt="hero" style="display:none;" id="hero"/>
 
-		<button type="button" id="myBtn" onclick="button()">Play!</button>
+		<button type="button" id="myBtn" onclick="initGame()">Play!</button>
 		<br> <br>
 		<SECTION id="canvas">
 
@@ -137,15 +102,7 @@
 
 		<script>
 
-		var posX=0;
-		var posY=0;
-
-		var heromove = "none";
-
-		//neccessary variables
-		var tickX = 0;
-		var tickY = 0;
-
+		//global variables
 		var keyW = false;
 		var keyA = false;
 		var keyS = false;
@@ -163,18 +120,6 @@
 			[3,3,0,0,0,0,0,0,5,3],
 			[3,3,3,3,3,3,3,3,3,3]
 		];
-
-		myDrawing = new drawing();
-		//drawTree();
-
-		var canvas = document.getElementById("myCanvas");
-		var ctx = canvas.getContext("2d");		//This is 2D drawing context for canvas
-
-		myHero = new hero();
-		var hposx = myHero.findPositionX();
-		var hposy = myHero.findPositionY();
-		var myConsole = document.getElementById("console");
-		myConsole.innerHTML += hposx + ", " + hposy;
 
 		</script>
 
