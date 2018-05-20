@@ -15,21 +15,25 @@
 
 		window.addEventListener("keyup", onKeyUp);
 
+		        // 0=right 1=left 2=down 3=up
 		        function onKeyUp(event) {
+		        if (isPlayerTurn == true){
 		          switch (event.key) {
 		            case "d":
-		              updateStuff(1, 0);
+		              updateStuff(0);
 		              break;
 		            case "s":
-		              updateStuff(0, 1);
+		              updateStuff(2);
 		              break;
 		            case "a":
-		              updateStuff(-1, 0);
+		              updateStuff(1);
 		              break;
 		            case "w":
-		              updateStuff(0, -1);
+		              updateStuff(3);
 		              break;
 		          }
+		          isPlayerTurn = false;
+		        }  
 		        }
 
 		function drawBackground(canvas, ctx)
@@ -41,39 +45,92 @@
 	            ctx.fillStyle = undefined;
 			}
 
-		function updateStuff(playerdX,playerdY) {
-			// TODO: loop over the all actors and call update() on each one.
-			for (var i=0; i < allActors.length; i++){
+		function drawMessage(message)
+			{
+				var c = document.getElementById("myCanvas");
+		  		var ctx = c.getContext("2d");
+	            ctx.fillStyle = "#ffffff";
+	            ctx.fillRect(60, 284, 520, 72);
+	            ctx.fillStyle = "#8873a3";
+	            ctx.fillRect(64, 288, 512, 64);
+	            ctx.font = "30px Comic Sans MS";
+	            ctx.fillStyle = "white";
+	            ctx.textAlign = "center";
+				ctx.fillText(message, c.width/2, ((c.height/2)+6)); 
+	            console.log("print");
+			}	
+
+		function checkWin(){
+			var win = true;
+			for (var i=0; i < allSlimes.length; i++){
 				//console.log(i);
-				allActors[i].update(playerdX,playerdY);
+				if (allSlimes[i].dead == false){
+					win = false;
+				}
 			}
+			
+			return win;
 		}
 
-    function drawRectCentered(ctx, color, cx, cy, w, h) {
-      const x = cx - w/2;
-      const y = cy - h/2;
-      ctx.fillStyle = color;
-      ctx.fillRect(x,y,w,h)
-    }
+		function checkLoss(){
+			var loss = false;
+			if (myHero.dead == true){
+				loss = true;
+			}
+			
+			return loss;
+		}
+
+		function updateStuff(direction) {
+			// TODO: loop over the all actors and call update() on each one.
+			if (!checkWin() && !checkLoss())
+			{
+				myHero.update(direction);
+
+				setTimeout(function() {
+				  for (var i=0; i < allSlimes.length; i++){
+					//console.log(i);
+					if (allSlimes[i].dead == false){
+						allSlimes[i].update(direction);
+					}
+					}
+					isPlayerTurn = true;
+				}, 250)	
+			}
+		}
 
 		function drawStuff() {
 		  var c = document.getElementById("myCanvas");
 		  var ctx = c.getContext("2d");
 		  drawBackground(c, ctx);
-
-		  for (var i=0; i < allActors.length; i++){
-		  	allActors[i].draw(ctx);
-		  }
+		  
 		  for (var i=0; i < allObstacles.length; i++){
 		  	allObstacles[i].draw(ctx);
 		  }
 		  for (var i=0; i < allPotions.length; i++){
-		  	allPotions[i].draw(ctx);
+		  	if (allPotions[i].dead == false){
+		  		allPotions[i].draw(ctx);
+		  	}
 		  }
-
-		  drawRectCentered(ctx, "#fff", 320, 320, 512, 64)
-
-		  window.requestAnimationFrame(drawStuff);
+		  for (var i=0; i < allSlimes.length; i++){
+			if (allSlimes[i].dead == false){
+				allSlimes[i].draw(ctx);
+			}
+		  }
+		  if (myHero.dead == false){
+				myHero.draw(ctx);
+			}
+		  
+		  	if (checkWin() == true){
+				drawMessage("you win! :-)");
+			}
+			else
+			if (checkLoss() == true){
+				drawMessage("you lose! :-(");
+			}
+			else{
+				window.requestAnimationFrame(drawStuff);
+			}
 		}
 
 		function initGame() {
@@ -90,22 +147,23 @@
 		    6: "slime",
 		    7: "hero",
 			}
-
-			allActors = [];
+			
+			allSlimes = [];
 			allObstacles = [];
 			allPotions = [];
+			myHero = new actor(0,1,"hero", 50, 1, 1);
 
 			for (var i=0; i < mapArray.length; i++){
                 for (var j=0; j < mapArray[i].length; j++){
                     const type = mapping[mapArray[i][j]]
                     if (type == "tree" || type == "mountains" || type == "brick") {
-                        allObstacles.push(new actor(j, i, type));
+                        allObstacles.push(new nonactor(j, i, type));
                     }
-                    if (type == "hero" || type == "slime") {
-                        allActors.push(new actor(j, i, type));
+                    if (type == "slime") {
+                        allSlimes.push(new actor(j, i, type, (Math.floor(Math.random() * 35) + 15), (Math.floor(Math.random() * 5) + 1), (Math.floor(Math.random() * 5) + 1)));
                     }
                     if (type == "potion") {
-                        allPotions.push(new actor(j, i, type));
+                        allPotions.push(new nonactor(j, i, type));
                     }
                 }
             }
@@ -149,13 +207,15 @@
 		<script>
 
 		//global variables
-		var allActors;
+		var allSlimes;
 		var allObstacles;
 		var allPotions;
+		var myHero;
+		var isPlayerTurn = true;
 
 		var mapArray=[
 			[4,4,4,4,4,4,4,4,4,4],
-			[7,0,0,0,0,0,0,6,2,2],
+			[0,0,0,0,0,0,0,6,2,2],
 			[2,0,2,2,0,2,2,0,3,3],
 			[2,0,0,0,6,0,0,0,2,5],
 			[3,3,0,0,2,3,3,3,3,0],
