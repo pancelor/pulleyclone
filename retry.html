@@ -139,6 +139,17 @@
       }
     }
 
+    function getCameraOffset(canvas) {
+      const hero = heros()[0]
+      if (!hero) {
+        return { x:0, y:0 }
+      }
+
+      const H = canvas.height;
+      const W = canvas.width;
+      return { x: W/2 - (hero.x+0.5)*hero.img.width, y: H/2 - (hero.y+0.5)*hero.img.height }
+    }
+
     function draw() {
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext('2d');
@@ -147,7 +158,10 @@
       ctx.fillStyle = ctx.createPattern(img, 'repeat');
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      entities.forEach(e=>e.draw(canvas, ctx));
+      const offset = getCameraOffset(canvas)
+      ctx.translate(offset.x, offset.y)
+      entities.forEach(e=>e.draw(canvas, ctx, offset));
+      ctx.translate(-offset.x, -offset.y)
 
       if (checkWin()) {
         drawMessage(canvas, ctx, "You win! :-)")
@@ -202,7 +216,7 @@
       }
 
       draw(canvas, ctx){
-        ctx.drawImage(this.img, this.x*64, this.y*64);
+        ctx.drawImage(this.img, this.x*this.img.width, this.y*this.img.height)
       }
 
       tryMove(x, y) {
@@ -231,16 +245,17 @@
 
       draw(canvas, ctx) {
         Entity.prototype.draw.call(this, canvas, ctx);
-        const myCenter = { x: (this.x*64)+32, y: (this.y*64)+32 };
+        let x = (this.x+0.5)*this.img.width
+        let y = (this.y+0.5)*this.img.height - 40
 
         // maxhp
         ctx.fillStyle = "#c5648f";
-        fillRectCentered(ctx, myCenter.x, myCenter.y-40, 48, 8);
+        fillRectCentered(ctx, x, y, 48, 8);
 
         // hp
         const width = 48 * (this.hp / 4.0);
         ctx.fillStyle = "#ff6b7d";
-        fillRectCentered(ctx, myCenter.x, myCenter.y-40, width, 8);
+        fillRectCentered(ctx, x, y, width, 8);
       }
 
       tryAttack(enemies, x, y) {
