@@ -67,8 +67,7 @@ function initTiles() {
 function exportTilesString() {
   const lines = []
   lines.push("const tileData = `")
-  const nrr = tiles.length
-  const ncc = tiles[0].length
+  const {width: ncc, height: nrr} = tilesDim()
   for (let rr = 0; rr < nrr; rr++) {
     const chars = []
     for (let cc = 0; cc < ncc; cc++) {
@@ -95,8 +94,7 @@ function exportActorsString() {
   const lines = []
   lines.push("const actorData = `")
   for (let a of actors) {
-    const {x, y} = a.pos.toTilePos()
-    lines.push(`${a.img.id} ${x} ${y}`)
+    lines.push(`${a.img.id} ${a.pos.tileX()} ${a.pos.tileY()}`)
   }
   lines.push("`")
   lines.push("")
@@ -146,45 +144,81 @@ function getCameraOffset() {
     return { x:0, y:0 }
   }
 
-  const H = canvas.height;
   const W = canvas.width;
+  const H = canvas.height;
   let {x, y} = hero.pos.toCanvasPos();
   x += gridX / 2;
   y += gridY / 2;
   return { x: W/2 - x, y: H/2 - y }
 }
 
+function tilesDim() {
+  return {
+    width: (tiles && tiles.length > 0) ? tiles[0].length : 0,
+    height: tiles.length,
+  }
+}
+
+function modifyTilesDim(dWidth, dHeight) {
+  const {width, height} = tilesDim()
+  setTilesDim(
+    clamp(width+dWidth, 0, 1000),
+    clamp(height+dHeight, 0, 1000),
+  )
+}
+
+function setTilesDim(newWidth, newHeight) {
+  assert(editorActive())
+  const {width: oldNcc, height: oldNrr} = tilesDim()
+  // const before = exportTilesString();
+  const nrr = newHeight
+  const ncc = newWidth
+  // console.log({oldNrr, oldNcc, nrr, ncc});
+  oldTiles = tiles
+  tiles = []
+  for (let rr = 0; rr < nrr; rr++) {
+    tiles.push([]);
+    for (let cc = 0; cc < ncc; cc++) {
+      tiles[rr][cc] = (rr >= oldNrr || cc >= oldNcc) ? 0 : oldTiles[rr][cc];
+    }
+  }
+  for (let a of actors) {
+    if (a.pos.tileRR() >= nrr || a.pos.tileCC() >= ncc) { deadQueue.push(a) }
+  }
+  purgeDead()
+  // const after = exportTilesString();
+  // console.log(before)
+  // console.log(after);
+  redraw()
+}
+
 function drawTiles(ctx) {
-  for (let rr = 0; rr < tiles.length; rr++) {
-    for (let cc = 0; cc < tiles[rr].length; cc++) {
+  const {width: ncc, height: nrr} = tilesDim()
+  for (let rr = 0; rr < nrr; rr++) {
+    for (let cc = 0; cc < ncc; cc++) {
       const code = tiles[rr][cc]
       const type = lookupTile[code]
       const img = document.getElementById(type)
       const pos = new TilePos({x: cc, y: rr})
       drawImg(ctx, img, pos)
-      // ctx.drawImage(img, x*img.width, y*img.height)
     }
   }
 }
 
 function drawImg(ctx, img, pos, scale=1) {
-  const {x, y} = pos.toCanvasPos()
-  ctx.drawImage(img, x, y, img.width*scale, img.height*scale)
+  ctx.drawImage(img, pos.canvasX(), pos.canvasY(), img.width*scale, img.height*scale)
 }
 
 function drawLine(ctx, p1, p2) {
-  const {x: x1, y: y1} = p1.toCanvasPos()
-  const {x: x2, y: y2} = p2.toCanvasPos()
   ctx.beginPath()
-  ctx.moveTo(x1, y1)
-  ctx.lineTo(x2, y2)
+  ctx.moveTo(p1.canvasX(), p1.canvasY())
+  ctx.lineTo(p2.canvasX(), p2.canvasY())
   ctx.stroke()
 }
 
 function drawCircle(ctx, p, r) {
-  const {x, y} = p.toCanvasPos()
   ctx.beginPath()
-  ctx.arc(x, y, r, 0, 2 * Math.PI)
+  ctx.arc(p.canvasX(), p.canvasY(), r, 0, 2 * Math.PI)
   ctx.fill()
 }
 
@@ -199,8 +233,7 @@ function ctxWith(ctx, map, cb) {
 }
 
 function tileAtIncludes(p, names){
-  const {x, y} = p.toTilePos()
-  const code = tiles[y][x]
+  const code = tiles[p.tileRR()][p.tileCC()]
   const type = lookupTile[code]
   return names.includes(type)
 }
@@ -209,14 +242,14 @@ function drawActors(ctx) {
   actors.forEach(e=>e.draw(ctx));
 }
 
-function draw() {
+function redraw() {
   const ctx = canvas.getContext('2d');
   if (editorActive()) {
     drawEditor(ctx)
   } else {
     drawGame(ctx)
   }
-  requestAnimationFrame(draw)
+  requestAnimationFrame(redraw)
 }
 
 function drawGame(ctx) {
@@ -231,9 +264,9 @@ function drawGame(ctx) {
   // ctx.translate(-offset.x, -offset.y)
 
   if (checkWin()) {
-    drawMessage(ctx, "You win! :-)")
+    drawMessage(ctx, "You win!")
   } else if (checkLose()) {
-    drawMessage(ctx, "You lose! :-(")
+    drawMessage(ctx, "You lose!")
   }
 }
 
@@ -241,10 +274,28 @@ function drawGame(ctx) {
 // classes
 //
 
-class TilePos {
+class Pos {
   constructor({x, y}) {
-    this.x = Math.floor(x)
-    this.y = Math.floor(y)
+    this.x = x
+    this.y = y
+  }
+
+  tileX() { return this.toTilePos().x }
+  tileY() { return this.toTilePos().y }
+  tileRR() { return this.toTilePos().y }
+  tileCC() { return this.toTilePos().x }
+  canvasX() { return this.toCanvasPos().x }
+  canvasY() { return this.toCanvasPos().y }
+
+  equals(other) {
+    if (this.constructor !== other.constructor) { return false }
+    return this.x === other.x && this.y === other.y
+  }
+}
+
+class TilePos extends Pos {
+  constructor({x, y}) {
+    super({x: Math.floor(x), y: Math.floor(y)})
     // this.centered = centered
   }
 
@@ -266,17 +317,11 @@ class TilePos {
       y: this.y*gridY,
     })
   }
-
-  equals(other) {
-    const {x, y} = other.toTilePos()
-    return this.x === x && this.y === y
-  }
 }
 
-class CanvasPos {
+class CanvasPos extends Pos {
   constructor({x, y}) {
-    this.x = x
-    this.y = y
+    super({x, y})
   }
 
   toTilePos() {
@@ -294,12 +339,6 @@ class CanvasPos {
 
   toCanvasPos() {
     return this
-  }
-
-  equals(other) {
-    const {x: tx, y: ty} = this.toTilePos()
-    const {x: ox, y: oy} = other.toTilePos()
-    return tx === ox && ty === oy
   }
 }
 
@@ -381,10 +420,10 @@ class Hero extends Alive {
   update(dir) {
     const dx = [1,0,-1,0][dir];
     const dy = [0,-1,0,1][dir];
-    const {x, y} = this.pos.toTilePos()
-    const newX = x + dx;
-    const newY = y + dy;
-    const p = new TilePos({x: newX, y: newY})
+    const p = new TilePos({
+      x: this.pos.tileX() + dx,
+      y: this.pos.tileY() + dy,
+    })
     this.tryMove(p);
     this.tryDrink();
     this.tryAttack(slimes(), p);
@@ -409,10 +448,10 @@ class Slime extends Alive {
     const dir = randInt(4);
     const dx = [1,0,-1,0][dir];
     const dy = [0,-1,0,1][dir];
-    const {x, y} = this.pos.toTilePos()
-    const newX = x + dx;
-    const newY = y + dy;
-    const p = new TilePos({x: newX, y: newY})
+    const p = new TilePos({
+      x: this.pos.tileX() + dx,
+      y: this.pos.tileY() + dy,
+    })
     this.tryMove(p);
     this.tryAttack(heros(), p);
   }

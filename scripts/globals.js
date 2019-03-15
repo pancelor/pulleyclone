@@ -89,6 +89,7 @@ function registerListeners() {
   })
   canvas.addEventListener("mouseup", (e) => {
     mousedown = false
+    canvas.focus()
     e.preventDefault()
   })
 
@@ -100,7 +101,15 @@ function registerListeners() {
 
   editorButton.onclick = toggleEditor
   saveButton.onclick = ()=>downloadFile("level.dat", exportLevelString())
+  addColButton.onclick = ()=>modifyTilesDim(1, 0)
+  rmColButton.onclick = ()=>modifyTilesDim(-1, 0)
+  addRowButton.onclick = ()=>modifyTilesDim(0, 1)
+  rmRowButton.onclick = ()=>modifyTilesDim(0, -1)
 }
+
+//
+// init
+//
 
 function init() {
   initLevelLookups()
@@ -111,6 +120,6 @@ function init() {
   initActors()
   isPlayerTurn = true;
   deadQueue = [];
-  requestAnimationFrame(draw)
+  redraw()
 }
 window.onload = init

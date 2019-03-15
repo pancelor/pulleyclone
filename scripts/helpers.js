@@ -27,3 +27,15 @@ function randInt(min, max) {
   }
   return Math.floor(Math.random() * (max-min)) + min;
 }
+
+function clamp(x, a, b) {
+  if (x < a) { return a }
+  if (x > b) { return b }
+  return x
+}
+
+function assert(b, msg=null) {
+  if (!b) {
+    console.error(msg ? msg : "assert error")
+  }
+}

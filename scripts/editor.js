@@ -74,7 +74,6 @@ function clickBrush(e) {
 
 function setTile(p, code) {
   if (inbounds(p)) {
-    const {x: cc, y: rr} = p.toTilePos()
-    tiles[rr][cc] = code
+    tiles[p.tileRR()][p.tileCC()] = code
   }
 }
