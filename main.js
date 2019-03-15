@@ -4,7 +4,7 @@
 // helpers
 //
 
-function drawMessage(canvas, ctx, msg) {
+function drawMessage(ctx, msg) {
   const W = canvas.width;
   const H = canvas.height;
   ctx.fillStyle = "white";
@@ -107,7 +107,7 @@ function update(dir) {
   }
 }
 
-function getCameraOffset(canvas) {
+function getCameraOffset() {
   const hero = heros()[0]
   if (!hero) {
     return { x:0, y:0 }
@@ -118,7 +118,7 @@ function getCameraOffset(canvas) {
   return { x: W/2 - (hero.x+0.5)*hero.img.width, y: H/2 - (hero.y+0.5)*hero.img.height }
 }
 
-function drawTiles(canvas, ctx) {
+function drawTiles(ctx) {
   for (var rr = 0; rr < tiles.length; rr++) {
     for (var cc = 0; cc < tiles[rr].length; cc++) {
       const code = tiles[rr][cc]
@@ -137,28 +137,27 @@ function tileAtIncludes(x, y, names){
   return names.includes(type)
 }
 
-function drawActors(canvas, ctx) {
-  actors.forEach(e=>e.draw(canvas, ctx));
+function drawActors(ctx) {
+  actors.forEach(e=>e.draw(ctx));
 }
 
 function draw() {
-  const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext('2d');
 
   const img = document.getElementById("grass");
   ctx.fillStyle = ctx.createPattern(img, 'repeat');
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const offset = getCameraOffset(canvas)
+  const offset = getCameraOffset()
   ctx.translate(offset.x, offset.y)
-  drawTiles(canvas, ctx);
-  drawActors(canvas, ctx);
+  drawTiles(ctx);
+  drawActors(ctx);
   ctx.translate(-offset.x, -offset.y)
 
   if (checkWin()) {
-    drawMessage(canvas, ctx, "You win! :-)")
+    drawMessage(ctx, "You win! :-)")
   } else if (checkLose()) {
-    drawMessage(canvas, ctx, "You lose! :-(")
+    drawMessage(ctx, "You lose! :-(")
   } else {
     requestAnimationFrame(draw)
   }
@@ -195,7 +194,7 @@ class Actor {
     this.img = img;
   }
 
-  draw(canvas, ctx){
+  draw(ctx){
     ctx.drawImage(this.img, this.x*this.img.width, this.y*this.img.height)
   }
 
@@ -218,8 +217,8 @@ class Alive extends Actor {
     this.atk = atk;
   }
 
-  draw(canvas, ctx) {
-    Actor.prototype.draw.call(this, canvas, ctx);
+  draw(ctx) {
+    Actor.prototype.draw.call(this, ctx);
     let x = (this.x+0.5)*this.img.width
     let y = (this.y+0.5)*this.img.height - 40
 
