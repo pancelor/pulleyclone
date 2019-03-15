@@ -334,8 +334,9 @@ function potions() {
 
 function inbounds(p) {
   const {x, y} = p.toTilePos()
+  const {width, height} = tilesDim()
   if (x == null || y == null) { return false }
-  return 0 <= x && x < 10 && 0 <= y && y < 10
+  return 0 <= x && x < width && 0 <= y && y < height
 }
 
 function locChecker(p) {
