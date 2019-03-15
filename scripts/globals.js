@@ -57,7 +57,7 @@ function registerListeners() {
         break;
     }
   })
-  canvas.addEventListener("keyup", (e) => {
+  window.addEventListener("keyup", (e) => {
     let dir;
     switch (e.key) {
       case "d":
@@ -118,16 +118,27 @@ function registerListeners() {
 }
 
 //
-// init
+// other
 //
+
+function redraw() {
+  const ctx = canvas.getContext('2d');
+  ctxWith(ctx, {fillStyle: "lightgray"}, cls)
+  if (editorActive()) {
+    drawEditor(ctx)
+  } else {
+    drawGame(ctx)
+  }
+  requestAnimationFrame(redraw)
+}
 
 function init() {
   initLevelLookups()
   registerListeners()
   mousepos = new CanvasPos({x: null, y: null});
   initEditor()
-  initTiles()
-  initActors()
+  loadTiles()
+  loadActors()
   fitCanvasToTiles()
   isPlayerTurn = true;
   deadQueue = [];

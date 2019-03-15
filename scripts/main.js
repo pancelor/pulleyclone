@@ -1,112 +1,6 @@
-// multipleFilesExample()
-
-//
-// helpers
-//
-
-function drawMessage(ctx, msg) {
-  const W = canvas.width;
-  const H = canvas.height;
-  ctxWith(ctx, {globalAlpha: 0.66}, () => {
-    ctx.fillStyle = "white";
-    fillRectCentered(ctx, W/2, H/2, W*0.9 + 10, H*0.1 + 10)
-    ctx.fillStyle = "#8873a3";
-    fillRectCentered(ctx, W/2, H/2, W*0.9, H*0.1)
-  })
-  ctx.font = "30px Comic Sans MS";
-  ctx.fillStyle = "white";
-  ctx.textAlign = "center";
-  ctx.fillText(msg, W/2, H/2 + 10);
-}
-
-function fillRectCentered(ctx, cx, cy, w, h) {
-  const x = cx - w/2;
-  const y = cy - h/2;
-  ctx.fillRect(x,y,w,h);
-}
-
-function heros() {
-  return actors.filter(e=>e.constructor===Hero);
-}
-
-function slimes() {
-  return actors.filter(e=>e.constructor===Slime);
-}
-
-function potions() {
-  return actors.filter(e=>e.constructor===Potion);
-}
-
-function inbounds(p) {
-  const {x, y} = p.toTilePos()
-  if (x == null || y == null) { return false }
-  return 0 <= x && x < 10 && 0 <= y && y < 10
-}
-
-function locChecker(p) {
-  return (other) => p.equals(other.pos)
-}
-
 //
 // main game
 //
-
-function initTiles() {
-  let lines = tileData.trim().split('\n')
-  const nrr = lines.length
-  const ncc = lines[0].length
-  tiles = [];
-  for (let rr = 0; rr < nrr; rr++) {
-    tiles.push([]);
-    for (let cc = 0; cc < ncc; cc++) {
-      tiles[rr][cc] = lines[rr][cc];
-    }
-  }
-}
-
-function exportTilesString() {
-  const lines = []
-  lines.push("const tileData = `")
-  const {width: ncc, height: nrr} = tilesDim()
-  for (let rr = 0; rr < nrr; rr++) {
-    const chars = []
-    for (let cc = 0; cc < ncc; cc++) {
-      chars.push(tiles[rr][cc]);
-    }
-    lines.push(chars.join(''))
-  }
-  lines.push("`")
-  lines.push("")
-  return lines.join("\n")
-}
-
-function initActors() {
-  let lines = actorData.trim().split('\n')
-  actors = [];
-  for (let l of lines) {
-    const [type, x, y] = l.split(' ')
-    const constructor = lookupActor[type]
-    actors.push(new constructor(x, y));
-  }
-}
-
-function exportActorsString() {
-  const lines = []
-  lines.push("const actorData = `")
-  for (let a of actors) {
-    lines.push(`${a.img.id} ${a.pos.tileX()} ${a.pos.tileY()}`)
-  }
-  lines.push("`")
-  lines.push("")
-  return lines.join("\n")
-}
-
-function exportLevelString() {
-  const lines = []
-  lines.push(exportTilesString())
-  lines.push(exportActorsString())
-  return lines.join("\n")
-}
 
 function purgeDead() {
   const t1 = deadQueue
@@ -194,6 +88,12 @@ function setTilesDim(newWidth, newHeight) {
   redraw()
 }
 
+function fitCanvasToTiles() {
+  const {width, height} = tilesDim()
+  canvas.width = width*gridX
+  canvas.height = height*gridX
+}
+
 function drawTiles(ctx) {
   const {width: ncc, height: nrr} = tilesDim()
   for (let rr = 0; rr < nrr; rr++) {
@@ -207,63 +107,8 @@ function drawTiles(ctx) {
   }
 }
 
-function drawImg(ctx, img, pos, scale=1) {
-  ctx.drawImage(img, pos.canvasX(), pos.canvasY(), img.width*scale, img.height*scale)
-}
-
-function drawLine(ctx, p1, p2) {
-  ctx.beginPath()
-  ctx.moveTo(p1.canvasX(), p1.canvasY())
-  ctx.lineTo(p2.canvasX(), p2.canvasY())
-  ctx.stroke()
-}
-
-function drawCircle(ctx, p, r) {
-  ctx.beginPath()
-  ctx.arc(p.canvasX(), p.canvasY(), r, 0, 2 * Math.PI)
-  ctx.fill()
-}
-
-function ctxWith(ctx, map, cb) {
-  const old = {}
-  Object.keys(map).forEach((k) => {
-    old[k] = ctx[k]
-  })
-  Object.assign(ctx, map)
-  cb()
-  Object.assign(ctx, old)
-}
-
-function tileAtIncludes(p, names){
-  const code = tiles[p.tileRR()][p.tileCC()]
-  const type = lookupTile[code]
-  return names.includes(type)
-}
-
 function drawActors(ctx) {
   actors.forEach(e=>e.draw(ctx));
-}
-
-function fitCanvasToTiles() {
-  const {width, height} = tilesDim()
-  canvas.width = width*gridX
-  canvas.height = height*gridX
-}
-
-function cls() {
-  const ctx = canvas.getContext('2d');
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-function redraw() {
-  const ctx = canvas.getContext('2d');
-  ctxWith(ctx, {fillStyle: "lightgray"}, cls)
-  if (editorActive()) {
-    drawEditor(ctx)
-  } else {
-    drawGame(ctx)
-  }
-  requestAnimationFrame(redraw)
 }
 
 function drawGame(ctx) {
@@ -469,4 +314,36 @@ class Slime extends Alive {
     this.tryMove(p);
     this.tryAttack(heros(), p);
   }
+}
+
+//
+// helpers
+//
+
+function heros() {
+  return actors.filter(e=>e.constructor===Hero);
+}
+
+function slimes() {
+  return actors.filter(e=>e.constructor===Slime);
+}
+
+function potions() {
+  return actors.filter(e=>e.constructor===Potion);
+}
+
+function inbounds(p) {
+  const {x, y} = p.toTilePos()
+  if (x == null || y == null) { return false }
+  return 0 <= x && x < 10 && 0 <= y && y < 10
+}
+
+function locChecker(p) {
+  return (other) => p.equals(other.pos)
+}
+
+function tileAtIncludes(p, names){
+  const code = tiles[p.tileRR()][p.tileCC()]
+  const type = lookupTile[code]
+  return names.includes(type)
 }
