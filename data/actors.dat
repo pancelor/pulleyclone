@@ -1,9 +1,0 @@
-function initActors() {
-  actors = [];
-  actors.push(new Hero(1, 1));
-  actors.push(new Slime(3, 5));
-  actors.push(new Slime(4, 8));
-  actors.push(new Slime(8, 4));
-  actors.push(new Potion(2, 6));
-  actors.push(new Potion(8, 3));
-}

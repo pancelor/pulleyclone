@@ -7,21 +7,35 @@
   <canvas id="canvas" width=640 height=640>
     Your browser doesn't support the canvas html element; sorry :(
   </canvas>
+  <div>
+    <button id="editorButton">Editor</button>
+    <div id="editor">
+      <label for="brushSelect">Brush:</label>
+      <select id="brushSelect">
+        <!-- options will be added by the js -->
+      </select>
+      <button id="saveButton">Save</button>
+    </div>
+  </div>
 
-  <img src="./data/grass.png" style="display:none" id="grass">
-  <img src="./data/dirt.png" style="display:none" id="dirt">
-  <img src="./data/tree.png" style="display:none" id="tree">
-  <img src="./data/bricks.png" style="display:none" id="brick">
-  <img src="./data/mountains.png" style="display:none" id="mountain">
-  <img src="./data/potion.png" style="display:none" id="potion">
-  <img src="./data/slime.png" style="display:none" id="slime">
-  <img src="./data/hero.png" style="display:none" id="hero">
+  <div id="sprites">
+    <img src="./data/grass.png" style="display:none" id="grass">
+    <img src="./data/dirt.png" style="display:none" id="dirt">
+    <img src="./data/tree.png" style="display:none" id="tree">
+    <img src="./data/bricks.png" style="display:none" id="brick">
+    <img src="./data/mountains.png" style="display:none" id="mountain">
+    <img src="./data/potion.png" style="display:none" id="potion">
+    <img src="./data/slime.png" style="display:none" id="slime">
+    <img src="./data/hero.png" style="display:none" id="hero">
+  </div>
 
   <script src="./data/config.dat"> </script>
-  <script src="./data/tiles.dat"> </script>
-  <script src="./data/actors.dat"> </script>
-  <script src="./a.js"> </script>
+  <script src="./data/level.dat"> </script>
+  <script src="./scripts/a.js"> </script>
 
-  <script src="./main.js"> </script>
+  <script src="./scripts/globals.js"> </script>
+  <script src="./scripts/helpers.js"> </script>
+  <script src="./scripts/editor.js"> </script>
+  <script src="./scripts/main.js"> </script>
 </body>
 </html>
