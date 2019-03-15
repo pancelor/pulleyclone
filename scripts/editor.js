@@ -50,9 +50,9 @@ function drawBrush(ctx) {
   // drawCircle(ctx, mousepos, 2)
 
   const img = document.getElementById(brushSelect.value)
-  ctxWith(ctx, {globalAlpha: 0.75}, () => {
+  ctxWith(ctx, {globalAlpha: 0.50}, () => {
     if (inbounds(mousepos)) {
-      drawImg(ctx, img, mousepos, 0.5)
+      drawImg(ctx, img, mousepos.toTilePos())
     }
   })
 }
@@ -66,7 +66,7 @@ function drawEditor(ctx) {
   //   ctx.fillRect(0, 0, canvas.width, canvas.height);
   // })
 
-  ctxWith(ctx, {strokeStyle: "darkgray"}, () => drawGrid(ctx))
+  ctxWith(ctx, {globalAlpha: 0.33, strokeStyle: "gray"}, drawGrid)
 
   drawBrush(ctx)
 }

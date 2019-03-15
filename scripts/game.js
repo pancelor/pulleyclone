@@ -90,8 +90,8 @@ function setTilesDim(newWidth, newHeight) {
 
 function fitCanvasToTiles() {
   const {width, height} = tilesDim()
-  canvas.width = width*gridX
-  canvas.height = height*gridX
+  canvas.width = width*gridX*viewScale
+  canvas.height = height*gridX*viewScale
 }
 
 function drawTiles(ctx) {
@@ -191,8 +191,8 @@ class CanvasPos extends Pos {
       })
     }
     return new TilePos({
-      x: this.x / gridX,
-      y: this.y / gridY,
+      x: this.x / (gridX * viewScale),
+      y: this.y / (gridY * viewScale),
     })
   }
 
@@ -263,16 +263,23 @@ class Alive extends Actor {
   }
 }
 
-class Potion extends Actor {
+class Block extends Actor {
   constructor(x, y) {
-    const img = document.getElementById("potion");
+    const img = document.getElementById("block");
+    super(x, y, img);
+  }
+}
+
+class Gem extends Actor {
+  constructor(x, y) {
+    const img = document.getElementById("gem");
     super(x, y, img);
   }
 }
 
 class Hero extends Alive {
   constructor(x, y) {
-    const img = document.getElementById("hero");
+    const img = document.getElementById("heroClimb");
     super(x, y, img, 4, 1);
   }
 
@@ -284,35 +291,6 @@ class Hero extends Alive {
       y: this.pos.tileY() + dy,
     })
     this.tryMove(p);
-    this.tryDrink();
-    this.tryAttack(slimes(), p);
-  }
-
-  tryDrink() {
-    const potion = potions().find(locChecker(this.pos))
-    if (potion) {
-      this.hp = this.maxhp;
-      deadQueue.push(potion);
-    }
-  }
-}
-
-class Slime extends Alive {
-  constructor(x, y) {
-    const img = document.getElementById("slime");
-    super(x, y, img, 2, 1);
-  }
-
-  update() {
-    const dir = randInt(4);
-    const dx = [1,0,-1,0][dir];
-    const dy = [0,-1,0,1][dir];
-    const p = new TilePos({
-      x: this.pos.tileX() + dx,
-      y: this.pos.tileY() + dy,
-    })
-    this.tryMove(p);
-    this.tryAttack(heros(), p);
   }
 }
 
@@ -322,14 +300,6 @@ class Slime extends Alive {
 
 function heros() {
   return actors.filter(e=>e.constructor===Hero);
-}
-
-function slimes() {
-  return actors.filter(e=>e.constructor===Slime);
-}
-
-function potions() {
-  return actors.filter(e=>e.constructor===Potion);
 }
 
 function inbounds(p) {

@@ -1,6 +1,5 @@
-function cls() {
-  const ctx = canvas.getContext('2d');
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function cls(ctx) {
+  drawImg(ctx, background, new TilePos({x: 0, y: 0}))
 }
 
 function ctxWith(ctx, map, cb) {
@@ -13,11 +12,15 @@ function ctxWith(ctx, map, cb) {
     old[k] = ctx[k]
   })
   Object.assign(ctx, map)
-  cb()
+  cb(ctx)
   Object.assign(ctx, old)
 }
 
 function drawImg(ctx, img, pos, scale=1) {
+  if (img == null) {
+    assert(0, "null image")
+    return
+  }
   ctx.drawImage(img, pos.canvasX(), pos.canvasY(), img.width*scale, img.height*scale)
 }
 

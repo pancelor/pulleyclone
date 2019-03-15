@@ -1,2 +1,3 @@
-const gridX = 64
-const gridY = 64
+const gridX = 5
+const gridY = 5
+const viewScale = 8

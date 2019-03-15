@@ -12,26 +12,28 @@ let lookupTile;
 let reverseLookupTile;
 
 function initLevelLookups() {
+  // TODO: auto-make these
+  // TODO: rm empty.png
   lookupActor = {
-    "potion": Potion,
-    "slime": Slime,
-    "hero": Hero,
+    "heroClimb": Hero,
+    "block": Block,
+    "gem": Gem,
   }
 
   lookupTile = {
-    0: "grass",
+    0: "empty",
     1: "dirt",
-    2: "tree",
-    3: "brick",
-    4: "mountain",
+    2: "ladder",
+    3: "platform",
+    4: "ladderPlatform",
   }
 
   reverseLookupTile = {
-    "grass": 0,
+    "empty": 0,
     "dirt": 1,
-    "tree": 2,
-    "brick": 3,
-    "mountain": 4,
+    "ladder": 2,
+    "platform": 3,
+    "ladderPlatform": 4,
   }
 }
 
@@ -122,8 +124,11 @@ function registerListeners() {
 //
 
 function redraw() {
-  const ctx = canvas.getContext('2d');
-  ctxWith(ctx, {fillStyle: "lightgray"}, cls)
+  const ctx = canvas.getContext('2d')
+  ctx.imageSmoothingEnabled = false
+  ctx.setTransform()
+  ctx.scale(viewScale, viewScale)
+  cls(ctx)
   if (editorActive()) {
     drawEditor(ctx)
   } else {
