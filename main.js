@@ -61,11 +61,13 @@ function locChecker(x, y) {
 // main game
 //
 
+
 function initTiles() {
   entities = [];
-  for (var i = 0; i < startingMap.length; i++) {
-    for (var j = 0; j < startingMap[i].length; j++) {
-      const code = startingMap[i][j];
+  let t = tileData.trim().split('\n')
+  for (var i = 0; i < t.length; i++) {
+    for (var j = 0; j < t[i].length; j++) {
+      const code = t[i][j];
       const type = spriteIndex[code];
       if (type == "brick" || type == "tree" || type == "mountain") {
         const img = document.getElementById(type)
@@ -73,15 +75,6 @@ function initTiles() {
       }
     }
   }
-}
-
-function initActors() {
-  entities.push(new Hero(1, 1));
-  entities.push(new Slime(3, 5));
-  entities.push(new Slime(4, 8));
-  entities.push(new Slime(8, 4));
-  entities.push(new Potion(2, 6));
-  entities.push(new Potion(8, 3));
 }
 
 function init() {
@@ -173,19 +166,6 @@ const spriteIndex = {
   6: "slime",
   7: "hero",
 }
-
-const startingMap = [
-  [4,4,4,4,4,4,4,4,4,4],
-  [0,0,0,2,2,0,0,2,2,2],
-  [0,0,0,0,2,0,2,2,2,2],
-  [3,0,0,0,0,0,2,3,0,2],
-  [3,0,0,0,0,3,2,3,0,0],
-  [3,3,0,0,0,3,0,3,0,0],
-  [3,3,0,0,0,3,0,0,0,0],
-  [0,0,0,2,0,0,0,0,2,2],
-  [2,0,0,0,0,2,2,2,2,2],
-  [2,3,3,3,3,3,2,2,2,2],
-];
 
 //
 // classes
