@@ -183,12 +183,15 @@ function setTilesDim(newWidth, newHeight) {
     }
   }
   for (let a of actors) {
-    if (a.pos.tileRR() >= nrr || a.pos.tileCC() >= ncc) { deadQueue.push(a) }
+    if (a.pos.tileRR() >= nrr || a.pos.tileCC() >= ncc) {
+      deadQueue.push(a)
+    }
   }
-  purgeDead()
+  purgeDead() // HACK: we're kinda abusing the dead queue here
   // const after = exportTilesString();
   // console.log(before)
   // console.log(after);
+  fitCanvasToTiles()
   redraw()
 }
 
@@ -242,8 +245,20 @@ function drawActors(ctx) {
   actors.forEach(e=>e.draw(ctx));
 }
 
+function fitCanvasToTiles() {
+  const {width, height} = tilesDim()
+  canvas.width = width*gridX
+  canvas.height = height*gridX
+}
+
+function cls() {
+  const ctx = canvas.getContext('2d');
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
 function redraw() {
   const ctx = canvas.getContext('2d');
+  ctxWith(ctx, {fillStyle: "lightgray"}, cls)
   if (editorActive()) {
     drawEditor(ctx)
   } else {

@@ -118,6 +118,7 @@ function init() {
   initEditor()
   initTiles()
   initActors()
+  fitCanvasToTiles()
   isPlayerTurn = true;
   deadQueue = [];
   redraw()
