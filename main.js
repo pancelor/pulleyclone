@@ -1,3 +1,4 @@
+multipleFilesExample()
 
 //
 // helpers
