@@ -40,8 +40,7 @@ function initLevelLookups() {
 //
 
 function registerListeners() {
-  window.addEventListener("keyup", (e) => {
-    let dir;
+  window.addEventListener("keydown", (e) => {
     switch (e.key) {
       case "Enter":
         init()
@@ -50,6 +49,17 @@ function registerListeners() {
       case "Space":
         toggleEditor();
         break;
+      case "Tab":
+        if (editorActive()) {
+          cycleBrush()
+        }
+        e.preventDefault()
+        break;
+    }
+  })
+  canvas.addEventListener("keyup", (e) => {
+    let dir;
+    switch (e.key) {
       case "d":
       case "ArrowRight":
         dir = 0;
@@ -67,11 +77,11 @@ function registerListeners() {
         dir = 3;
         break;
     }
-    if (editorActive()) {return;}
-    if (dir === undefined) {return;}
-    if (!isPlayerTurn) {return;}
-    isPlayerTurn = false;
-    update(dir);
+    if (editorActive()) { return }
+    if (!isPlayerTurn) { return }
+    if (dir === undefined) { return }
+    isPlayerTurn = false
+    update(dir)
   })
 
   canvas.addEventListener("mousemove", (e) => {

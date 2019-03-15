@@ -160,11 +160,10 @@ function tilesDim() {
 }
 
 function modifyTilesDim(dWidth, dHeight) {
-  const {width, height} = tilesDim()
-  setTilesDim(
-    clamp(width+dWidth, 0, 1000),
-    clamp(height+dHeight, 0, 1000),
-  )
+  let {width, height} = tilesDim()
+  width = clamp(width+dWidth, 1, 1000),
+  height = clamp(height+dHeight, 1, 1000),
+  setTilesDim(width, height)
 }
 
 function setTilesDim(newWidth, newHeight) {

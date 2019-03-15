@@ -24,6 +24,11 @@ function buildBrushSelect() {
   }
 }
 
+function cycleBrush() {
+  const L = brushSelect.options.length
+  brushSelect.selectedIndex = (brushSelect.selectedIndex + 1) % L
+}
+
 function drawGrid(ctx) {
   const nrr = tiles.length
   const ncc = tiles[0].length
