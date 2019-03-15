@@ -1,4 +1,4 @@
-multipleFilesExample()
+// multipleFilesExample()
 
 //
 // helpers
@@ -34,19 +34,15 @@ function randInt(min, max) {
 }
 
 function heros() {
-  return entities.filter(e=>e.constructor===Hero);
-}
-
-function obstacles() {
-  return entities.filter(e=>e.constructor===Obstacle);
+  return actors.filter(e=>e.constructor===Hero);
 }
 
 function slimes() {
-  return entities.filter(e=>e.constructor===Slime);
+  return actors.filter(e=>e.constructor===Slime);
 }
 
 function potions() {
-  return entities.filter(e=>e.constructor===Potion);
+  return actors.filter(e=>e.constructor===Potion);
 }
 
 function inbounds(x, y) {
@@ -63,16 +59,12 @@ function locChecker(x, y) {
 
 
 function initTiles() {
-  entities = [];
   let t = tileData.trim().split('\n')
-  for (var i = 0; i < t.length; i++) {
-    for (var j = 0; j < t[i].length; j++) {
-      const code = t[i][j];
-      const type = spriteIndex[code];
-      if (type == "brick" || type == "tree" || type == "mountain") {
-        const img = document.getElementById(type)
-        entities.push(new Obstacle(j, i, img));
-      }
+  tiles = [];
+  for (var rr = 0; rr < t.length; rr++) {
+    tiles.push([]);
+    for (var cc = 0; cc < t[rr].length; cc++) {
+      tiles[rr][cc] = t[rr][cc];
     }
   }
 }
@@ -88,9 +80,9 @@ window.onload = init
 
 function purgeDead() {
   const t1 = deadQueue
-  const t2 =  t1.map(dead=>entities.findIndex(e=>e===dead))
+  const t2 =  t1.map(dead=>actors.findIndex(e=>e===dead))
   const t3 =  t2.sort((a, b)=>b-a)
-              t3.forEach(i=>entities.splice(i, 1));
+              t3.forEach(i=>actors.splice(i, 1));
   // if(t3.length) {console.log({t1,t2,t3});}
   deadQueue = [];
 }
@@ -126,6 +118,29 @@ function getCameraOffset(canvas) {
   return { x: W/2 - (hero.x+0.5)*hero.img.width, y: H/2 - (hero.y+0.5)*hero.img.height }
 }
 
+function drawTiles(canvas, ctx) {
+  for (var rr = 0; rr < tiles.length; rr++) {
+    for (var cc = 0; cc < tiles[rr].length; cc++) {
+      const code = tiles[rr][cc]
+      const type = lookupTile[code]
+      const img = document.getElementById(type)
+      const x = cc
+      const y = rr
+      ctx.drawImage(img, x*img.width, y*img.height)
+    }
+  }
+}
+
+function tileAtIncludes(x, y, names){
+  const code = tiles[y][x]
+  const type = lookupTile[code]
+  return names.includes(type)
+}
+
+function drawActors(canvas, ctx) {
+  actors.forEach(e=>e.draw(canvas, ctx));
+}
+
 function draw() {
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext('2d');
@@ -136,7 +151,8 @@ function draw() {
 
   const offset = getCameraOffset(canvas)
   ctx.translate(offset.x, offset.y)
-  entities.forEach(e=>e.draw(canvas, ctx, offset));
+  drawTiles(canvas, ctx);
+  drawActors(canvas, ctx);
   ctx.translate(-offset.x, -offset.y)
 
   if (checkWin()) {
@@ -152,12 +168,13 @@ function draw() {
 // globals
 //
 
-let entities;
+let actors;
+let tiles;
 let deadQueue;
 let isPlayerTurn;
 
-const spriteIndex = {
-  // 0: "grass",
+const lookupTile = {
+  0: "grass",
   1: "dirt",
   2: "tree",
   3: "brick",
@@ -171,7 +188,7 @@ const spriteIndex = {
 // classes
 //
 
-class Entity {
+class Actor {
   constructor(x, y, img) {
     this.x = x;
     this.y = y;
@@ -184,21 +201,16 @@ class Entity {
 
   tryMove(x, y) {
     if (!inbounds(x, y)) { return; }
+    if (tileAtIncludes(x, y, ["brick", "tree", "mountain"])) { return; }
     if (slimes().some(locChecker(x, y))) { return; }
     if (heros().some(locChecker(x, y))) { return; }
-    if (obstacles().some(locChecker(x, y))) { return; }
     this.x = x;
     this.y = y;
   }
 }
 
-class Obstacle extends Entity {
-  constructor(x, y, img) {
-    super(x, y, img);
-  }
-}
 
-class Alive extends Entity {
+class Alive extends Actor {
   constructor(x, y, img, hp, atk) {
     super(x, y, img);
     this.hp = hp;
@@ -207,7 +219,7 @@ class Alive extends Entity {
   }
 
   draw(canvas, ctx) {
-    Entity.prototype.draw.call(this, canvas, ctx);
+    Actor.prototype.draw.call(this, canvas, ctx);
     let x = (this.x+0.5)*this.img.width
     let y = (this.y+0.5)*this.img.height - 40
 
@@ -236,7 +248,7 @@ class Alive extends Entity {
   }
 }
 
-class Potion extends Entity {
+class Potion extends Actor {
   constructor(x, y) {
     const img = document.getElementById("potion");
     super(x, y, img);

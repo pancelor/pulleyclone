@@ -1,8 +1,0 @@
-function initActors() {
-  entities.push(new Hero(1, 1));
-  entities.push(new Slime(3, 5));
-  entities.push(new Slime(4, 8));
-  entities.push(new Slime(8, 4));
-  entities.push(new Potion(2, 6));
-  entities.push(new Potion(8, 3));
-}
