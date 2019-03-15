@@ -45,18 +45,18 @@ function potions() {
   return actors.filter(e=>e.constructor===Potion);
 }
 
-function inbounds(x, y) {
+function inbounds(p) {
+  const {x, y} = p.toTilePos()
   return 0 <= x && x < 10 && 0 <= y && y < 10
 }
 
-function locChecker(x, y) {
-  return (other) => (x===other.x && y===other.y)
+function locChecker(p) {
+  return (other) => p.equals(other.pos)
 }
 
 //
 // main game
 //
-
 
 function initTiles() {
   let t = tileData.trim().split('\n')
@@ -115,7 +115,10 @@ function getCameraOffset() {
 
   const H = canvas.height;
   const W = canvas.width;
-  return { x: W/2 - (hero.x+0.5)*hero.img.width, y: H/2 - (hero.y+0.5)*hero.img.height }
+  let {x, y} = hero.pos.toScreenPos();
+  x += gridX / 2;
+  y += gridY / 2;
+  return { x: W/2 - x, y: H/2 - y }
 }
 
 function drawTiles(ctx) {
@@ -124,14 +127,20 @@ function drawTiles(ctx) {
       const code = tiles[rr][cc]
       const type = lookupTile[code]
       const img = document.getElementById(type)
-      const x = cc
-      const y = rr
-      ctx.drawImage(img, x*img.width, y*img.height)
+      const pos = new TilePos({x: cc, y: rr})
+      drawImg(ctx, img, pos)
+      // ctx.drawImage(img, x*img.width, y*img.height)
     }
   }
 }
 
-function tileAtIncludes(x, y, names){
+function drawImg(ctx, img, pos) {
+  const {x, y} = pos.toScreenPos()
+  ctx.drawImage(img, x, y)
+}
+
+function tileAtIncludes(p, names){
+  const {x, y} = p.toTilePos()
   const code = tiles[y][x]
   const type = lookupTile[code]
   return names.includes(type)
@@ -187,27 +196,74 @@ const lookupTile = {
 // classes
 //
 
+class TilePos {
+  constructor({x, y}) {
+    this.x = Math.floor(x)
+    this.y = Math.floor(y)
+    // this.centered = centered
+  }
+
+  toTilePos() {
+    return this
+  }
+
+  toScreenPos() {
+    // const x = this.x + (this.centered ? 0.5 : 0)
+    // const y = this.y + (this.centered ? 0.5 : 0)
+    return new ScreenPos({
+      x: this.x*gridX,
+      y: this.y*gridY,
+    })
+  }
+
+  equals(other) {
+    const {x, y} = other.toTilePos()
+    return this.x === x && this.y === y
+  }
+}
+
+class ScreenPos {
+  constructor({x, y}) {
+    this.x = x
+    this.y = y
+  }
+
+  toTilePos() {
+    return new TilePos({
+      rr: this.y / gridY,
+      cc: this.x / gridX,
+    })
+  }
+
+  toScreenPos() {
+    return this
+  }
+
+  equals(other) {
+    const {x: tx, y: ty} = this.toTilePos()
+    const {x: ox, y: oy} = other.toTilePos()
+    return tx === ox && ty === oy
+  }
+}
+
 class Actor {
   constructor(x, y, img) {
-    this.x = x;
-    this.y = y;
+    this.pos = new TilePos({x, y});
     this.img = img;
   }
 
   draw(ctx){
-    ctx.drawImage(this.img, this.x*this.img.width, this.y*this.img.height)
+    drawImg(ctx, this.img, this.pos)
   }
 
-  tryMove(x, y) {
-    if (!inbounds(x, y)) { return; }
-    if (tileAtIncludes(x, y, ["brick", "tree", "mountain"])) { return; }
-    if (slimes().some(locChecker(x, y))) { return; }
-    if (heros().some(locChecker(x, y))) { return; }
-    this.x = x;
-    this.y = y;
+  tryMove(p) {
+    if (!inbounds(p)) { return; }
+    if (tileAtIncludes(p, ["brick", "tree", "mountain"])) { return; }
+    if (slimes().some(locChecker(p))) { return; }
+    if (heros().some(locChecker(p))) { return; }
+    this.pos = p;
   }
 }
-
 
 class Alive extends Actor {
   constructor(x, y, img, hp, atk) {
@@ -219,8 +275,9 @@ class Alive extends Actor {
 
   draw(ctx) {
     Actor.prototype.draw.call(this, ctx);
-    let x = (this.x+0.5)*this.img.width
-    let y = (this.y+0.5)*this.img.height - 40
+    let {x, y} = this.pos.toScreenPos()
+    x += gridX / 2
+    y += gridY / 2 - 40
 
     // maxhp
     ctx.fillStyle = "#c5648f";
@@ -232,8 +289,8 @@ class Alive extends Actor {
     fillRectCentered(ctx, x, y, width, 8);
   }
 
-  tryAttack(enemies, x, y) {
-    const other = enemies.find(locChecker(x, y))
+  tryAttack(enemies, p) {
+    const other = enemies.find(locChecker(p))
     if (other) {
       other.takeDamage(this.atk);
     }
@@ -263,15 +320,17 @@ class Hero extends Alive {
   update(dir) {
     const dx = [1,0,-1,0][dir];
     const dy = [0,-1,0,1][dir];
-    const newX = this.x + dx;
-    const newY = this.y + dy;
-    this.tryMove(newX, newY);
+    const {x, y} = this.pos.toTilePos()
+    const newX = x + dx;
+    const newY = y + dy;
+    const p = new TilePos({x: newX, y: newY})
+    this.tryMove(p);
     this.tryDrink();
-    this.tryAttack(slimes(), newX, newY);
+    this.tryAttack(slimes(), p);
   }
 
   tryDrink() {
-    const potion = potions().find(locChecker(this.x, this.y))
+    const potion = potions().find(locChecker(this.pos))
     if (potion) {
       this.hp = this.maxhp;
       deadQueue.push(potion);
@@ -289,10 +348,12 @@ class Slime extends Alive {
     const dir = randInt(4);
     const dx = [1,0,-1,0][dir];
     const dy = [0,-1,0,1][dir];
-    const newX = this.x + dx;
-    const newY = this.y + dy;
-    this.tryMove(newX, newY);
-    this.tryAttack(heros(), newX, newY);
+    const {x, y} = this.pos.toTilePos()
+    const newX = x + dx;
+    const newY = y + dy;
+    const p = new TilePos({x: newX, y: newY})
+    this.tryMove(p);
+    this.tryAttack(heros(), p);
   }
 }
 

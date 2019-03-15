@@ -1,0 +1,2 @@
+const gridX = 64
+const gridY = 64
