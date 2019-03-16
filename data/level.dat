@@ -26,5 +26,5 @@ const tileData = `
 
 const actorData = `
 heroClimb 0 1
-gem 1 0
+gem 6 20
 `
