@@ -4,11 +4,10 @@ A clone of http://www.draknek.org/games/puzzlescript/pulleys.php
 
 # How to run
 
-open main.html; play in browser
+clone project; open main.html; play in browser
+coming soon: play online at https://pancelor.github.io/pulleyclone/
 
 # todo
 
-* make a level editor
-  * html? (easier)
-  * or fully inside canvas tag? (more portable)
+* make playing online work (need assets I guess?)
 * decide frd what tiles are... seems like theyre mainly some static sprites and a full-screen collision mask? like in celeste?
