@@ -9,6 +9,7 @@ function toggleEditor() {
   } else {
     editor.style.display = null
   }
+  raf()
 }
 
 function editorActive() {
@@ -27,6 +28,7 @@ function buildBrushSelect() {
 function cycleBrush() {
   const L = brushSelect.options.length
   brushSelect.selectedIndex = (brushSelect.selectedIndex + 1) % L
+  raf()
 }
 
 function drawGrid(ctx) {
