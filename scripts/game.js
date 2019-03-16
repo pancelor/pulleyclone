@@ -75,7 +75,7 @@ function setTilesDim(newWidth, newHeight) {
   for (let rr = 0; rr < nrr; rr++) {
     tiles.push([]);
     for (let cc = 0; cc < ncc; cc++) {
-      tiles[rr][cc] = (rr >= oldNrr || cc >= oldNcc) ? 0 : oldTiles[rr][cc];
+      tiles[rr][cc] = (rr >= oldNrr || cc >= oldNcc) ? "erase" : oldTiles[rr][cc];
     }
   }
   for (let a of actors) {
@@ -101,10 +101,9 @@ function drawTiles(ctx) {
   const {width: ncc, height: nrr} = tilesDim()
   for (let rr = 0; rr < nrr; rr++) {
     for (let cc = 0; cc < ncc; cc++) {
-      const code = tiles[rr][cc]
-      if (code === 0) { continue; }
-      const type = deserTileName[code]
-      const img = document.getElementById(type)
+      const name = tiles[rr][cc]
+      if (name === "erase") { continue; }
+      const img = document.getElementById(name)
       const pos = new TilePos({x: cc, y: rr})
       drawImg(ctx, img, pos)
     }
@@ -303,7 +302,6 @@ function locChecker(p) {
 }
 
 function tileAtIncludes(p, names){
-  const code = tiles[p.tileRR()][p.tileCC()]
-  const type = deserTileName[code]
-  return names.includes(type)
+  const name = tiles[p.tileRR()][p.tileCC()]
+  return names.includes(name)
 }

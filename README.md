@@ -16,6 +16,7 @@ option 2: clone project; open main.html; play in browser
   * pre-render tiles for drawing optimization? e.g. separate canvas that's
   written to once (bkg + tiles) and then blitted during `cls`
 
+* do animations / changing sprites
 * do proper physics / post-user updates
 * write undo system
 * add other objects; clone full game

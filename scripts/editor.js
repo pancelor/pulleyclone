@@ -71,14 +71,13 @@ function drawEditor(ctx) {
 }
 
 function clickBrush(e) {
-  const type = brushSelect.value
-  const code = serTileName[type]
-  setTile(mousepos, code)
+  const name = brushSelect.value
+  setTile(mousepos, name)
   raf()
 }
 
-function setTile(p, code) {
+function setTile(p, name) {
   if (inbounds(p)) {
-    tiles[p.tileRR()][p.tileCC()] = code
+    tiles[p.tileRR()][p.tileCC()] = name
   }
 }

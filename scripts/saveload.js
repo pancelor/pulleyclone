@@ -50,7 +50,8 @@ function loadTiles() {
   for (let rr = 0; rr < nrr; rr++) {
     tiles.push([]);
     for (let cc = 0; cc < ncc; cc++) {
-      tiles[rr][cc] = lines[rr][cc];
+      const code = lines[rr][cc];
+      tiles[rr][cc] = deserTileName[code]
     }
   }
 }
@@ -62,7 +63,8 @@ function exportTilesString() {
   for (let rr = 0; rr < nrr; rr++) {
     const chars = ["  "]
     for (let cc = 0; cc < ncc; cc++) {
-      chars.push(tiles[rr][cc]);
+      const name = tiles[rr][cc];
+      chars.push(serTileName[name]);
     }
     lines.push(chars.join(''))
   }
