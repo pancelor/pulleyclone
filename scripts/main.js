@@ -7,33 +7,24 @@ let tiles;
 let deadQueue;
 let isPlayerTurn;
 let mousepos;
-let lookupActor;
-let lookupTile;
-let reverseLookupTile;
+let deserActorClass;
+let deserTileName;
+let serTileName;
 
 function initLevelLookups() {
-  // TODO: auto-make these
   // TODO: rm empty.png
-  lookupActor = {
-    "heroClimb": Hero,
+  deserActorClass = {
+    "hero": Hero,
     "block": Block,
     "gem": Gem,
   }
 
-  lookupTile = {
-    0: "empty",
-    1: "dirt",
-    2: "ladder",
-    3: "platform",
-    4: "ladderPlatform",
-  }
-
-  reverseLookupTile = {
-    "empty": 0,
-    "dirt": 1,
-    "ladder": 2,
-    "platform": 3,
-    "ladderPlatform": 4,
+  deserTileName = {}
+  serTileName = {}
+  for (let i = 0; i < tilesList.children.length; i++) {
+    const img = tilesList.children[i]
+    deserTileName[i] = img.id
+    serTileName[img.id] = i
   }
 }
 

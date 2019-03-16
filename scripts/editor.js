@@ -17,7 +17,7 @@ function editorActive() {
 }
 
 function buildBrushSelect() {
-  for (let x of Object.keys(reverseLookupTile)){
+  for (let x of Object.keys(serTileName)){
     const option = document.createElement('option')
     option.value = x
     option.innerHTML = x
@@ -72,7 +72,7 @@ function drawEditor(ctx) {
 
 function clickBrush(e) {
   const type = brushSelect.value
-  const code = reverseLookupTile[type]
+  const code = serTileName[type]
   setTile(mousepos, code)
   raf()
 }

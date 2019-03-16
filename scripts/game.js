@@ -102,7 +102,8 @@ function drawTiles(ctx) {
   for (let rr = 0; rr < nrr; rr++) {
     for (let cc = 0; cc < ncc; cc++) {
       const code = tiles[rr][cc]
-      const type = lookupTile[code]
+      if (code === 0) { continue; }
+      const type = deserTileName[code]
       const img = document.getElementById(type)
       const pos = new TilePos({x: cc, y: rr})
       drawImg(ctx, img, pos)
@@ -217,7 +218,6 @@ class Actor {
   tryMove(p) {
     if (!inbounds(p)) { return; }
     if (tileAtIncludes(p, ["dirt"])) { return; }
-    if (heros().some(locChecker(p))) { return; }
     this.pos = p;
   }
 }
@@ -227,12 +227,32 @@ class Block extends Actor {
     const img = document.getElementById("block");
     super(x, y, img);
   }
+
+  serialize() {
+    return `block ${this.pos.tileX()} ${this.pos.tileY()}`
+  }
+
+  static deserialize(line) {
+    const [type, x, y] = line.split(' ')
+    assert(type === "block", `expected block got ${type}`)
+    return new Block(x, y);
+  }
 }
 
 class Gem extends Actor {
   constructor(x, y) {
     const img = document.getElementById("gem");
     super(x, y, img);
+  }
+
+  serialize() {
+    return `gem ${this.pos.tileX()} ${this.pos.tileY()}`
+  }
+
+  static deserialize(line) {
+    const [type, x, y] = line.split(' ')
+    assert(type === "gem", `expected gem got ${type}`)
+    return new Gem(x, y);
   }
 }
 
@@ -250,6 +270,16 @@ class Hero extends Actor {
       y: this.pos.tileY() + dy,
     })
     this.tryMove(p);
+  }
+
+  serialize() {
+    return `hero ${this.pos.tileX()} ${this.pos.tileY()}`
+  }
+
+  static deserialize(line) {
+    const [type, x, y] = line.split(' ')
+    assert(type === "hero", `expected hero got ${type}`)
+    return new Hero(x, y);
   }
 }
 
@@ -274,6 +304,6 @@ function locChecker(p) {
 
 function tileAtIncludes(p, names){
   const code = tiles[p.tileRR()][p.tileCC()]
-  const type = lookupTile[code]
+  const type = deserTileName[code]
   return names.includes(type)
 }

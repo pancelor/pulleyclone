@@ -31,18 +31,21 @@
     Your browser doesn't support the canvas html element; sorry :(
   </canvas>
 
-  <div id="sprites">
-    <img src="./data/background.png" style="display:none" id="background">
+  <div id="spritesList" style="display:none">
+    <img src="./data/background.png" id="background">
 
-    <img src="./data/empty.png" style="display:none" id="empty">
-    <img src="./data/dirt.png" style="display:none" id="dirt">
-    <img src="./data/ladder.png" style="display:none" id="ladder">
-    <img src="./data/platform.png" style="display:none" id="platform">
-    <img src="./data/ladderPlatform.png" style="display:none" id="ladderPlatform">
+    <div id="tilesList" >
+      <!-- first one here must be the eraser -->
+      <img src="./data/erase.png" id="erase">
+      <img src="./data/dirt.png" id="dirt">
+      <img src="./data/ladder.png" id="ladder">
+      <img src="./data/platform.png" id="platform">
+      <img src="./data/ladderPlatform.png" id="ladderPlatform">
+    </div>
 
-    <img src="./data/heroClimb.png" style="display:none" id="heroClimb">
-    <img src="./data/block.png" style="display:none" id="block">
-    <img src="./data/gem.png" style="display:none" id="gem">
+    <img src="./data/heroClimb.png" id="heroClimb">
+    <img src="./data/block.png" id="block">
+    <img src="./data/gem.png" id="gem">
   </div>
 
   <script src="./data/config.dat"> </script>

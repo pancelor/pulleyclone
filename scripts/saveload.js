@@ -31,9 +31,9 @@ function loadActors() {
   let lines = actorData.trim().split('\n')
   actors = [];
   for (let l of lines) {
-    const [type, x, y] = l.split(' ')
-    const constructor = lookupActor[type]
-    actors.push(new constructor(x, y));
+    const type = l.split(' ')[0]
+    const klass = deserActorClass[type]
+    actors.push(klass.deserialize(l));
   }
 }
 
@@ -41,7 +41,7 @@ function exportActorsString() {
   const lines = []
   lines.push("const actorData = `")
   for (let a of actors) {
-    lines.push(`${a.img.id} ${a.pos.tileX()} ${a.pos.tileY()}`)
+    lines.push(a.serialize())
   }
   lines.push("`")
   lines.push("")
