@@ -90,8 +90,8 @@ function setTilesDim(newWidth, newHeight) {
 
 function fitCanvasToTiles() {
   const {width, height} = tilesDim()
-  canvas.width = width*gridX*viewScale
-  canvas.height = height*gridX*viewScale
+  canvas.width = width*gridX
+  canvas.height = height*gridX
 }
 
 function drawTiles(ctx) {
@@ -191,8 +191,8 @@ class CanvasPos extends Pos {
       })
     }
     return new TilePos({
-      x: this.x / (gridX * viewScale),
-      y: this.y / (gridY * viewScale),
+      x: this.x / gridX,
+      y: this.y / gridY,
     })
   }
 

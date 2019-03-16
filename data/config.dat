@@ -1,3 +1,3 @@
-const gridX = 5
-const gridY = 5
-const viewScale = 8
+const gridX = 40
+const gridY = 40
+const imgScale = 8

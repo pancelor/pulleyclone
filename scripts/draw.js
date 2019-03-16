@@ -21,6 +21,7 @@ function drawImg(ctx, img, pos, scale=1) {
     assert(0, "null image")
     return
   }
+  scale *= imgScale
   ctx.drawImage(img, pos.canvasX(), pos.canvasY(), img.width*scale, img.height*scale)
 }
 

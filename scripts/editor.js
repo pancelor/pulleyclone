@@ -62,11 +62,8 @@ function drawEditor(ctx) {
   ctxWith(ctx, {globalAlpha: 0.850}, () => {
     drawActors(ctx)
   })
-  // ctxWith(ctx, {fillStyle: "lightgray"}, () => {
-  //   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // })
 
-  ctxWith(ctx, {globalAlpha: 0.33, strokeStyle: "gray"}, drawGrid)
+  ctxWith(ctx, {globalAlpha: 0.75, strokeStyle: "gray"}, drawGrid)
 
   drawBrush(ctx)
 }

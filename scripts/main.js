@@ -126,8 +126,6 @@ function registerListeners() {
 function redraw() {
   const ctx = canvas.getContext('2d')
   ctx.imageSmoothingEnabled = false
-  ctx.setTransform()
-  ctx.scale(viewScale, viewScale)
   cls(ctx)
   if (editorActive()) {
     drawEditor(ctx)
