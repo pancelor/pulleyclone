@@ -100,7 +100,7 @@ function registerListeners() {
     mousepos.x = e.offsetX
     mousepos.y = e.offsetY
     raf()
-    if (editorActive && mousedown) {
+    if (editorActive() && mousedown) {
       clickBrush(e)
     }
   })
