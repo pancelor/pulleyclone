@@ -12,7 +12,7 @@ function purgeDead() {
 }
 
 function checkWin() {
-  return slimes().length === 0;
+  return false;
 }
 
 function checkLose() {
@@ -24,9 +24,11 @@ function update(dir) {
   if (!checkLose()) {
     heros().forEach(e=>e.update(dir));
     purgeDead();
+    raf()
     setTimeout(() => {
       slimes().forEach(e=>e.update());
       purgeDead();
+      raf()
       isPlayerTurn = true;
     }, 100);
   }
@@ -85,7 +87,7 @@ function setTilesDim(newWidth, newHeight) {
   // console.log(before)
   // console.log(after);
   fitCanvasToTiles()
-  redraw()
+  raf()
 }
 
 function fitCanvasToTiles() {
@@ -112,10 +114,6 @@ function drawActors(ctx) {
 }
 
 function drawGame(ctx) {
-  // const img = document.getElementById("grass");
-  // ctx.fillStyle = ctx.createPattern(img, 'repeat');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   // const offset = getCameraOffset()
   // ctx.translate(offset.x, offset.y)
   drawTiles(ctx);

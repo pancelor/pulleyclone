@@ -89,6 +89,7 @@ function registerListeners() {
   canvas.addEventListener("mousemove", (e) => {
     mousepos.x = e.offsetX
     mousepos.y = e.offsetY
+    raf()
   })
 
   let mousedown = false
@@ -132,6 +133,9 @@ function redraw() {
   } else {
     drawGame(ctx)
   }
+}
+
+function raf() {
   requestAnimationFrame(redraw)
 }
 
@@ -145,6 +149,6 @@ function init() {
   fitCanvasToTiles()
   isPlayerTurn = true;
   deadQueue = [];
-  redraw()
+  raf()
 }
 window.onload = init

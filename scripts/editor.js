@@ -72,6 +72,7 @@ function clickBrush(e) {
   const type = brushSelect.value
   const code = reverseLookupTile[type]
   setTile(mousepos, code)
+  raf()
 }
 
 function setTile(p, code) {
