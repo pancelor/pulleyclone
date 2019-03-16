@@ -1,4 +1,8 @@
 function cls(ctx) {
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+}
+
+function drawBkg(ctx) {
   drawImg(ctx, background, new TilePos({x: 0, y: 0}))
 }
 

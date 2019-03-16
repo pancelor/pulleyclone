@@ -32,7 +32,7 @@ function registerListeners() {
         break;
       case " ":
       case "Space":
-        toggleEditor();
+        toggleEditor(); // NOTE: this is async, but we're not gonna care about it
         break;
       case "Tab":
         if (editorActive()) {
@@ -112,7 +112,6 @@ function registerListeners() {
 function redraw() {
   const ctx = canvas.getContext('2d')
   ctx.imageSmoothingEnabled = false
-  cls(ctx)
   if (editorActive()) {
     drawEditor(ctx)
   } else {
@@ -124,16 +123,21 @@ function raf() {
   requestAnimationFrame(redraw)
 }
 
-function init() {
+async function init() {
   initSerTables()
   registerListeners()
   mousepos = new CanvasPos({x: null, y: null});
   initEditor()
+
   loadTiles()
+  fitCanvasToTiles()
+  await initTileCache()
+
   loadActors()
   deadQueue = [];
-  fitCanvasToTiles()
+
   isPlayerTurn = true;
+
   raf()
 }
 window.onload = init

@@ -3,9 +3,10 @@ function initEditor() {
   buildBrushSelect()
 }
 
-function toggleEditor() {
+async function toggleEditor() {
   if (editorActive()) {
     editor.style.display = "none"
+    await initTileCache()
   } else {
     editor.style.display = null
   }

@@ -36,6 +36,7 @@ function clamp(x, a, b) {
 
 function assert(b, msg=null) {
   if (!b) {
-    console.error(msg ? msg : "assert error")
+    msg = msg ? msg : "assert error"
+    throw new Error(msg)
   }
 }

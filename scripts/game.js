@@ -97,7 +97,26 @@ function fitCanvasToTiles() {
   canvas.height = height*gridX
 }
 
+let tileCache;
+async function initTileCache(cb) {
+  const newCanvas = document.createElement("canvas")
+  newCanvas.width = canvas.width
+  newCanvas.height = canvas.height
+  const newCtx = newCanvas.getContext('2d')
+  newCtx.imageSmoothingEnabled = false
+  drawTiles(newCtx)
+  tileCache = await createImageBitmap(newCanvas)
+}
+
+// TODO: if we don't redraw the *entire* screen we wouldn't even need to call this every raf
+// (well, we'd need to blit the relevant part, obviously)
+function drawTilesCached(ctx) {
+  assert(tileCache, "missing tile cache")
+  ctx.drawImage(tileCache, 0, 0)
+}
+
 function drawTiles(ctx) {
+  drawBkg(ctx)
   const {width: ncc, height: nrr} = tilesDim()
   for (let rr = 0; rr < nrr; rr++) {
     for (let cc = 0; cc < ncc; cc++) {
@@ -117,7 +136,7 @@ function drawActors(ctx) {
 function drawGame(ctx) {
   // const offset = getCameraOffset()
   // ctx.translate(offset.x, offset.y)
-  drawTiles(ctx);
+  drawTilesCached(ctx);
   drawActors(ctx);
   // ctx.translate(-offset.x, -offset.y)
 
