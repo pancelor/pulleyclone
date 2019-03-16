@@ -42,7 +42,16 @@ function initLevelLookups() {
 //
 
 function registerListeners() {
+  window.addEventListener("contextmenu", (e) => {
+    e.preventDefault()
+    return false
+  })
+
   window.addEventListener("keydown", (e) => {
+    if (e.key === 'r' && e.ctrlKey) {
+      // let user reload the page; preventDefault on all else
+      return;
+    }
     switch (e.key) {
       case "Enter":
         init()
@@ -55,9 +64,10 @@ function registerListeners() {
         if (editorActive()) {
           cycleBrush()
         }
-        e.preventDefault()
         break;
     }
+    e.preventDefault()
+    return false
   })
   window.addEventListener("keyup", (e) => {
     let dir;
@@ -90,26 +100,27 @@ function registerListeners() {
     mousepos.x = e.offsetX
     mousepos.y = e.offsetY
     raf()
+    if (editorActive && mousedown) {
+      clickBrush(e)
+    }
   })
 
   let mousedown = false
   canvas.addEventListener("mousedown", (e) => {
+    e.preventDefault()
     mousedown = true
     if (editorActive) {
       clickBrush(e)
     }
     e.preventDefault()
+    return false
   })
   canvas.addEventListener("mouseup", (e) => {
+    e.preventDefault()
     mousedown = false
     canvas.focus()
     e.preventDefault()
-  })
-
-  canvas.addEventListener("mousemove", (e) => {
-    if (editorActive && mousedown) {
-      clickBrush(e)
-    }
+    return false
   })
 
   editorButton.onclick = toggleEditor
@@ -146,9 +157,9 @@ function init() {
   initEditor()
   loadTiles()
   loadActors()
+  deadQueue = [];
   fitCanvasToTiles()
   isPlayerTurn = true;
-  deadQueue = [];
   raf()
 }
 window.onload = init
