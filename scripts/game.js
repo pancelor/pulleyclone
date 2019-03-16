@@ -224,45 +224,6 @@ class Actor {
   }
 }
 
-class Alive extends Actor {
-  constructor(x, y, img, hp, atk) {
-    super(x, y, img);
-    this.hp = hp;
-    this.maxhp = hp;
-    this.atk = atk;
-  }
-
-  draw(ctx) {
-    Actor.prototype.draw.call(this, ctx);
-    let {x, y} = this.pos.toCanvasPos()
-    x += gridX / 2
-    y += gridY / 2 - 40
-
-    // maxhp
-    ctx.fillStyle = "#c5648f";
-    fillRectCentered(ctx, x, y, 48, 8);
-
-    // hp
-    const width = 48 * (this.hp / 4.0);
-    ctx.fillStyle = "#ff6b7d";
-    fillRectCentered(ctx, x, y, width, 8);
-  }
-
-  tryAttack(enemies, p) {
-    const other = enemies.find(locChecker(p))
-    if (other) {
-      other.takeDamage(this.atk);
-    }
-  }
-
-  takeDamage(amount) {
-    this.hp -= amount;
-    if (this.hp <= 0) {
-      deadQueue.push(this);
-    }
-  }
-}
-
 class Block extends Actor {
   constructor(x, y) {
     const img = document.getElementById("block");
@@ -277,7 +238,7 @@ class Gem extends Actor {
   }
 }
 
-class Hero extends Alive {
+class Hero extends Actor {
   constructor(x, y) {
     const img = document.getElementById("heroClimb");
     super(x, y, img, 4, 1);
