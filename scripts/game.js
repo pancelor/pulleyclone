@@ -26,9 +26,10 @@ function update(dir) {
     purgeDead();
     raf()
     setTimeout(() => {
-      slimes().forEach(e=>e.update());
-      purgeDead();
-      raf()
+      // TODO: do post-player updates here
+      // slimes().forEach(e=>e.update());
+      // purgeDead();
+      // raf()
       isPlayerTurn = true;
     }, 100);
   }
@@ -215,8 +216,7 @@ class Actor {
 
   tryMove(p) {
     if (!inbounds(p)) { return; }
-    if (tileAtIncludes(p, ["brick", "tree", "mountain"])) { return; }
-    if (slimes().some(locChecker(p))) { return; }
+    if (tileAtIncludes(p, ["dirt"])) { return; }
     if (heros().some(locChecker(p))) { return; }
     this.pos = p;
   }
