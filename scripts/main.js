@@ -11,23 +11,6 @@ let deserActorClass;
 let deserTileName;
 let serTileName;
 
-function initLevelLookups() {
-  // TODO: rm empty.png
-  deserActorClass = {
-    "hero": Hero,
-    "block": Block,
-    "gem": Gem,
-  }
-
-  deserTileName = {}
-  serTileName = {}
-  for (let i = 0; i < tilesList.children.length; i++) {
-    const img = tilesList.children[i]
-    deserTileName[i] = img.id
-    serTileName[img.id] = i
-  }
-}
-
 //
 // event handlers
 //
@@ -142,7 +125,7 @@ function raf() {
 }
 
 function init() {
-  initLevelLookups()
+  initSerTables()
   registerListeners()
   mousepos = new CanvasPos({x: null, y: null});
   initEditor()
