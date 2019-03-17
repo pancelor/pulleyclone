@@ -71,14 +71,34 @@ function drawEditor(ctx) {
   drawBrush(ctx)
 }
 
-function clickBrush(e) {
-  const name = brushSelect.value
-  setTile(mousepos, name)
-  raf()
+function getTile(p) {
+  if (inbounds(p)) {
+    return tiles[p.tileRR()][p.tileCC()]
+  } else {
+    return null
+  }
 }
 
 function setTile(p, name) {
   if (inbounds(p)) {
     tiles[p.tileRR()][p.tileCC()] = name
   }
+}
+
+function eyedropTile() {
+  let tileName = getTile(mousepos)
+  if (tileName === null) {
+    brushSelect.selectedIndex = 0
+  } else {
+    brushSelect.value = tileName
+  }
+}
+
+function eraseTile() {
+  setTile(mousepos, "erase")
+}
+
+function paintTile() {
+  const name = brushSelect.value
+  setTile(mousepos, name)
 }

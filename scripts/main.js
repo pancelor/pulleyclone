@@ -22,7 +22,7 @@ function registerListeners() {
   })
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === 'r' && e.ctrlKey) {
+    if (/*e.key === 'r' &&*/ e.ctrlKey) {
       // let user reload the page; preventDefault on all else
       return;
     }
@@ -75,7 +75,7 @@ function registerListeners() {
     mousepos.y = e.offsetY
     raf()
     if (editorActive() && mousedown) {
-      clickBrush(e)
+      click(e)
     }
   })
 
@@ -84,7 +84,7 @@ function registerListeners() {
     e.preventDefault()
     mousedown = true
     if (editorActive) {
-      clickBrush(e)
+      click(e)
     }
     e.preventDefault()
     return false
@@ -103,6 +103,22 @@ function registerListeners() {
   rmColButton.onclick = ()=>modifyTilesDim(-1, 0)
   addRowButton.onclick = ()=>modifyTilesDim(0, 1)
   rmRowButton.onclick = ()=>modifyTilesDim(0, -1)
+}
+
+function click(e) {
+  LMB = 1<<0
+  RMB = 1<<1
+  MMB = 1<<2
+  if (e.buttons & MMB) {
+    eraseTile()
+  } else if (e.buttons & RMB) {
+    eyedropTile()
+  } else if (e.buttons & LMB) {
+    paintTile()
+  } else {
+    assert(0)
+  }
+  raf()
 }
 
 //

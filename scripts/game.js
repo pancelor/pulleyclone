@@ -36,14 +36,14 @@ function update(dir) {
 }
 
 function getCameraOffset() {
-  const hero = heros()[0]
-  if (!hero) {
+  const heroTemp = heros()[0]
+  if (!heroTemp) {
     return { x:0, y:0 }
   }
 
   const W = canvas.width;
   const H = canvas.height;
-  let {x, y} = hero.pos.toCanvasPos();
+  let {x, y} = heroTemp.pos.toCanvasPos();
   x += gridX / 2;
   y += gridY / 2;
   return { x: W/2 - x, y: H/2 - y }
@@ -276,7 +276,7 @@ class Gem extends Actor {
 
 class Hero extends Actor {
   constructor(x, y) {
-    const img = document.getElementById("heroClimb");
+    const img = document.getElementById("imgHeroClimb");
     super(x, y, img, 4, 1);
   }
 
