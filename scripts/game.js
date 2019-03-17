@@ -15,35 +15,34 @@ function checkWin() {
   return false;
 }
 
-function checkLose() {
-  return heros().length === 0;
-}
-
 function update(dir) {
-  // if (!checkWin() && !checkLose()) {
-  if (!checkLose()) {
-    heros().forEach(e=>e.update(dir));
+  if (!checkWin()) {
+    hero().update(dir);
     purgeDead();
     raf()
     setTimeout(() => {
       // TODO: do post-player updates here
-      // slimes().forEach(e=>e.update());
+      doGravity()
       // purgeDead();
-      // raf()
+      raf()
       isPlayerTurn = true;
     }, 100);
   }
 }
 
+function doGravity() {
+
+}
+
 function getCameraOffset() {
-  const heroTemp = heros()[0]
-  if (!heroTemp) {
+  const h = hero()
+  if (!h) {
     return { x:0, y:0 }
   }
 
   const W = canvas.width;
   const H = canvas.height;
-  let {x, y} = heroTemp.pos.toCanvasPos();
+  let {x, y} = h.pos.toCanvasPos();
   x += gridX / 2;
   y += gridY / 2;
   return { x: W/2 - x, y: H/2 - y }
@@ -142,8 +141,6 @@ function drawGame(ctx) {
 
   if (checkWin()) {
     drawMessage(ctx, "You win!")
-  } else if (checkLose()) {
-    drawMessage(ctx, "You lose!")
   }
 }
 
@@ -219,6 +216,15 @@ class CanvasPos extends Pos {
   }
 }
 
+function positionInDirection(p, dir) {
+  const dx = [1,0,-1,0][dir];
+  const dy = [0,-1,0,1][dir];
+  return p = new TilePos({
+    x: p.tileX() + dx,
+    y: p.tileY() + dy,
+  })
+}
+
 //
 // actors
 //
@@ -235,15 +241,14 @@ class Actor {
 
   tryMove(p) {
     if (!inbounds(p)) { return; }
-    if (tileAtIncludes(p, ["dirt"])) { return; }
+    if (getTile(p) === "dirt") { return; }
     this.pos = p;
   }
 }
 
 class Block extends Actor {
   constructor(x, y) {
-    const img = document.getElementById("block");
-    super(x, y, img);
+    super(x, y, imgBlock);
   }
 
   serialize() {
@@ -259,8 +264,7 @@ class Block extends Actor {
 
 class Gem extends Actor {
   constructor(x, y) {
-    const img = document.getElementById("gem");
-    super(x, y, img);
+    super(x, y, imgGem);
   }
 
   serialize() {
@@ -276,18 +280,42 @@ class Gem extends Actor {
 
 class Hero extends Actor {
   constructor(x, y) {
-    const img = document.getElementById("imgHeroClimb");
-    super(x, y, img, 4, 1);
+    super(x, y, imgHeroR, 4, 1);
   }
 
   update(dir) {
-    const dx = [1,0,-1,0][dir];
-    const dy = [0,-1,0,1][dir];
-    const p = new TilePos({
-      x: this.pos.tileX() + dx,
-      y: this.pos.tileY() + dy,
-    })
-    this.tryMove(p);
+    if (this.canMove(dir)) {
+      this.pos = positionInDirection(this.pos, dir)
+      if (dir === 0) { this.img = imgHeroR }
+      if (dir === 2) { this.img = imgHeroL }
+      if (dir === 1 || dir === 3) { this.img = imgHeroClimb }
+    }
+  }
+
+  canMove(dir) {
+    function isAny(t, ...arr) {
+      return arr.some(x=>x===t)
+    }
+
+    const pCurr = this.pos
+    const pNext = positionInDirection(pCurr, dir)
+    const tCurr = getTile(pCurr)
+    const tNext = getTile(pNext)
+    if (!inbounds(pNext)) { return false }
+    if (tNext === "dirt") { return false }
+
+    const isLadderIsh = isAny(tCurr, "ladder", "ladderPlatform")
+    const currIsLadderPlatform = isAny(tCurr, "ladderPlatform")
+    const nextIsLadder = isAny(tNext, "ladder", "ladderPlatform")
+    const nextIsLadderPlatform = isAny(tNext, "ladderPlatform")
+
+    if (dir === 3 && tNext === "ladderPlatform") { return true }
+    if (tCurr === "ladderPlatform" || tCurr === "ladder") {
+      // if (tCurr === "ladder" && dir === 1) { return false }
+      // the guy will hop up off of bare ladders that have no platform at the top; this is a bit
+      return true
+    }
+    return dir === 0 || dir === 2
   }
 
   serialize() {
@@ -305,8 +333,8 @@ class Hero extends Actor {
 // helpers
 //
 
-function heros() {
-  return actors.filter(e=>e.constructor===Hero);
+function hero() {
+  return actors.find(e=>e.constructor===Hero);
 }
 
 function inbounds(p) {

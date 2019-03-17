@@ -143,7 +143,6 @@ async function init() {
   initSerTables()
   registerListeners()
   mousepos = new CanvasPos({x: null, y: null});
-  initEditor()
 
   loadTiles()
   fitCanvasToTiles()
@@ -152,6 +151,7 @@ async function init() {
   loadActors()
   deadQueue = [];
 
+  initEditor()
   isPlayerTurn = true;
 
   raf()

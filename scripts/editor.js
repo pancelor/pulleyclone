@@ -1,5 +1,5 @@
 function initEditor() {
-  // toggleEditor() // start with editor off
+  toggleEditor() // start with editor off
   buildBrushSelect()
 }
 
