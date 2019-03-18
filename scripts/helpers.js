@@ -78,3 +78,47 @@ async function sleep(ms) {
     setTimeout(resolve, ms)
   })
 }
+
+
+function addDiffListener(evName, ignore=[]) {
+  let last = null;
+  window.addEventListener(evName, (e) => {
+    if (last) {
+      diffSummary(last, e, ignore)
+    }
+    last = e
+  })
+}
+
+function diffSummary(a, b, ignore=[]) {
+  const d = diff(a, b)
+  console.log("old:")
+  for (const prop of Object.keys(d.old)) {
+    if (ignore.includes(prop)) { continue }
+    console.log(`  ${prop}: ${d.old[prop]}`);
+  }
+  console.log("new:")
+  for (const prop of Object.keys(d.new)) {
+    if (ignore.includes(prop)) { continue }
+    console.log(`  ${prop}: ${d.new[prop]}`);
+  }
+}
+
+function diff(a, b) {
+  const res = { old: {}, new: {}}
+  for (const prop in a) {
+    if (a[prop] !== b[prop]) {
+      res.old[prop] = a[prop]
+      res.new[prop] = b[prop]
+    }
+  }
+  for (const prop in b) {
+    if (a[prop] !== b[prop]) {
+      res.old[prop] = a[prop]
+      res.new[prop] = b[prop]
+    }
+  }
+  return res
+}
+
+// e.g. addDiffListener("mousewheel", ["timestamp"])
