@@ -14,7 +14,10 @@ option 2: clone project; open main.html; play in browser
   * this makes editing possible on github
 * decide frd what tiles are... seems like they're mainly some static sprites and a full-screen collision mask? like in celeste?
 
-* do animations / changing sprites
+* light!
+* gravity / physics / etc on mirrors, gem
+* space to drag objects around
+* less hacky actor placing - currently it's essentially just another tile layer :/
 * do proper physics / post-user updates
 * write undo system
 * add other objects; clone full game

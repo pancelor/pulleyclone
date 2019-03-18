@@ -1,6 +1,6 @@
 function initEditor() {
   editorLayer = LAYER_TILE
-  // toggleEditor() // start with editor off
+  toggleEditor() // start with editor off
   buildBrushSelect()
 }
 
