@@ -96,7 +96,10 @@ const actorData = `
   Elevator 5 18
   Elevator 9 18
   Elevator 13 21
+  Mirror 8 6 2
+  Mirror 7 8 1
+  Mirror 4 17 3
+  Mirror 6 11 2
+  Mirror 12 11 0
   Hero 5 4
-  Mirror 8 6
-  Mirror 7 8
 `

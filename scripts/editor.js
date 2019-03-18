@@ -11,7 +11,6 @@ async function toggleEditor() {
   } else {
     editor.style.display = null
   }
-  raf()
 }
 
 function editorActive() {
@@ -52,6 +51,10 @@ function buildTileBrushSelect() {
   for (let img of tilesList.children){
     addBrushSelectOption(img.id)
   }
+}
+
+function saveLevel() {
+  downloadFile("level.dat", exportLevelString())
 }
 
 const LAYER_TILE = 1

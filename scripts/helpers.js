@@ -53,7 +53,7 @@ assert(saneMod(-6, 10) === 4)
 
 function assert(b, msg=null) {
   if (!b) {
-    msg = (msg === null) ? msg : "assert error"
+    msg = (msg !== null) ? msg : "assert error"
     throw new Error(msg)
   }
 }
@@ -64,6 +64,13 @@ function assert(b, msg=null) {
 //     console.warn(msg)
 //   }
 // }
+
+function int(str) {
+  if (!str.match(/\d+/)) {
+    throw new Error(`bad int parse on "${str}"`)
+  }
+  return parseInt(str)
+}
 
 function xor(a, b) {
   return !!a != !!b

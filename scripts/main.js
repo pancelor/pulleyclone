@@ -10,6 +10,28 @@ let mousepos;
 // event handlers
 //
 
+function combo(str) {
+  // returns a function f
+  // later, given a key event e, `f(e)` tells you whether
+  // e matches the key combo described by str
+  return e => {
+    return str.trim().split(' ').every(part => {
+      if (part === "ctrl") { return e.ctrlKey }
+      else if (part === "alt") { return e.altKey }
+      else if (part === "shift") { return e.shiftKey }
+      else if (part.length === 1) {
+        return (e.key === part.toLowerCase())
+      } else { assert(0, `bad key combo part ${part}`) }
+    })
+  }
+}
+const allowedKeyCombos = [
+  combo("ctrl l"),
+  combo("ctrl r"),
+  combo("ctrl shift r"),
+  combo("ctrl shift j"),
+]
+
 function registerListeners() {
   window.addEventListener("contextmenu", (e) => {
     e.preventDefault()
@@ -23,20 +45,22 @@ function registerListeners() {
   })
 
   window.addEventListener("keydown", async (e) => {
-    if (/*e.key === 'r' &&*/ e.ctrlKey) {
-      // let user reload the page; preventDefault on all else
-      return;
+    if (allowedKeyCombos.some(f=>f(e))) {
+      // don't preventDefault on whitelisted key combos
+      return
+    }
+    if (combo("ctrl s")(e)) {
+      saveLevel()
+      e.preventDefault()
+      return false
     }
     switch (e.key) {
       case "Enter": {
         reset()
       } break
-      case " ":
-      case "Space": {
-
-      } break
       case "Escape": {
-        await toggleEditor();
+        await toggleEditor()
+        raf()
       } break
       case "Tab": {
         if (editorActive()) {
@@ -125,8 +149,8 @@ function registerListeners() {
     return false
   })
 
-  editorButton.onclick = toggleEditor
-  saveButton.onclick = ()=>downloadFile("level.dat", exportLevelString())
+  editorButton.onclick = () => { toggleEditor(); raf() }
+  saveButton.onclick = saveLevel
   addColButton.onclick = ()=>modifyTilesDim(1, 0)
   rmColButton.onclick = ()=>modifyTilesDim(-1, 0)
   addRowButton.onclick = ()=>modifyTilesDim(0, 1)

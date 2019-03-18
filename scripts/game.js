@@ -262,7 +262,7 @@ function posDir(p, dir, len=1) {
 //
 
 class Actor {
-  constructor(pos, img) {
+  constructor(pos) {
     this.pos = pos
     this.img = this.constructor.img
   }
@@ -303,7 +303,8 @@ class Actor {
   static deserialize(line) {
     const [type, x, y] = line.split(' ')
     assert(type === this.name, `expected ${this.name} got ${type}`)
-    return new (this)(new TilePos({x, y}))
+    const p = new TilePos({x: int(x), y: int(y)})
+    return new (this)(p)
   }
 }
 
@@ -494,7 +495,13 @@ class Elevator extends Actor {
 }
 
 class Mirror extends Actor {
-  static img = imgMirrorUL
+  static img = imgMirrorUR
+
+  constructor(p, rot=0) {
+    super(p)
+    this.rot = rot
+    this.setImgFromRot()
+  }
 
   update(dir) {
     assert(dir === 0 || dir === 2)
@@ -502,26 +509,36 @@ class Mirror extends Actor {
   }
 
   fiddle() {
-    switch (this.img) {
-      case imgMirrorUL: {
-        this.img = imgMirrorUR
-      } break
-      case imgMirrorUR: {
-        this.img = imgMirrorDR
-      } break
-      case imgMirrorDR: {
-        this.img = imgMirrorDL
-      } break
-      default:
-      case imgMirrorDL: {
-        this.img = imgMirrorUL
-      } break
+    this.rot = saneMod(this.rot + 1, 4)
+    this.setImgFromRot()
+  }
+
+  setImgFromRot() {
+    switch (this.rot) {
+      case 0: { this.img = imgMirrorUR } break
+      case 1: { this.img = imgMirrorUL } break
+      case 2: { this.img = imgMirrorDL } break
+      case 3: { this.img = imgMirrorDR } break
+      default: { assert(0, "bad mirror rot") } break
     }
   }
 
   doGravity() {
     return fallableDoGravity(this, [Elevator, Block, Mirror, Gem])
   }
+
+  serialize() {
+    return `${this.constructor.name} ${this.pos.tileX()} ${this.pos.tileY()} ${this.rot}`
+  }
+
+  static deserialize(line) {
+    let [type, x, y, rot] = line.split(' ')
+    assert(type === this.name, `expected ${this.name} got ${type}`)
+    const p = new TilePos({x: int(x), y: int(y)})
+    rot = int(rot)
+    return new (this)(p, rot)
+  }
+
 }
 
 function fallableDoGravity(that, collidables) {
