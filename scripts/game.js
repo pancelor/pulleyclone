@@ -10,6 +10,10 @@ let deadQueue;
 // main game
 //
 
+function initGame() {
+  pairElevators()
+}
+
 function purgeDead() {
   const t1 = deadQueue
   const t2 =  t1.map(dead=>actors.findIndex(e=>e===dead))
@@ -42,7 +46,7 @@ function doGravity() {
   const h = hero()
   if (!h) { return false }
   const p = h.pos
-  const pUnder = positionInDirection(h.pos, 3)
+  const pUnder = posDir(h.pos, 3)
   const t = getTile(p)
   const tUnder = getTile(pUnder)
 
@@ -251,10 +255,10 @@ class CanvasPos extends Pos {
   }
 }
 
-function positionInDirection(p, dir) {
+function posDir(p, dir) {
   const dx = [1,0,-1,0][dir];
   const dy = [0,-1,0,1][dir];
-  return p = new TilePos({
+  return p = new (p.constructor)({
     x: p.tileX() + dx,
     y: p.tileY() + dy,
   })
@@ -289,33 +293,15 @@ class Actor {
       h: this.constructor.img.height*imgScale,
     }
   }
-}
-
-class Block extends Actor {
-  static img = imgBlock
 
   serialize() {
-    return `block ${this.pos.tileX()} ${this.pos.tileY()}`
+    return `${this.constructor.name} ${this.pos.tileX()} ${this.pos.tileY()}`
   }
 
   static deserialize(line) {
     const [type, x, y] = line.split(' ')
     assert(type === this.name, `expected ${this.name} got ${type}`)
-    return new Block(new TilePos({x, y}))
-  }
-}
-
-class Gem extends Actor {
-  static img = imgGem
-
-  serialize() {
-    return `gem ${this.pos.tileX()} ${this.pos.tileY()}`
-  }
-
-  static deserialize(line) {
-    const [type, x, y] = line.split(' ')
-    assert(type === this.name, `expected ${this.name} got ${type}`)
-    return new Gem(new TilePos({x, y}))
+    return new (this)(new TilePos({x, y}))
   }
 }
 
@@ -323,50 +309,104 @@ class Hero extends Actor {
   static img = imgHeroR
 
   update(dir) {
-    if (this.canMove(dir)) {
-      this.pos = positionInDirection(this.pos, dir)
-      if (dir === 0) { this.img = imgHeroR }
-      if (dir === 2) { this.img = imgHeroL }
-      if (dir === 1 || dir === 3) { this.img = imgHeroClimb }
-    }
-  }
-
-  canMove(dir) {
-    function isAny(t, ...arr) {
-      return arr.some(x=>x===t)
-    }
-
     const pCurr = this.pos
-    const pNext = positionInDirection(pCurr, dir)
+    const pNext = posDir(pCurr, dir)
     const tCurr = getTile(pCurr)
     const tNext = getTile(pNext)
-    if (!inbounds(pNext)) { return false }
-    if (tNext === "dirt") { return false }
 
-    const isLadderIsh = isAny(tCurr, "ladder", "ladderPlatform")
-    const currIsLadderPlatform = isAny(tCurr, "ladderPlatform")
-    const nextIsLadder = isAny(tNext, "ladder", "ladderPlatform")
-    const nextIsLadderPlatform = isAny(tNext, "ladderPlatform")
+    if (dir === 0) { this.img = imgHeroR }
+    if (dir === 2) { this.img = imgHeroL }
 
-    if (dir === 3 && tNext === "ladderPlatform") { return true }
-    if (tCurr === "ladderPlatform" || tCurr === "ladder") {
-      // if (tCurr === "ladder" && dir === 1) { return false }
-      // the guy will hop up off of bare ladders that have no platform at the top; this is a bit
-      return true
+    if (!inbounds(pNext)) { return }
+    if (tNext === "dirt") { return }
+
+    // ladders
+    if (dir === 3 && tNext === "ladderPlatform") {
+      this.pos = pNext
+      this.img = imgHeroClimb
     }
-    return dir === 0 || dir === 2
-  }
+    if (tCurr === "ladderPlatform" || tCurr === "ladder") {
+      // if (tCurr === "ladder" && dir === 1) { return }
+      // the guy will hop up off of bare ladders that have no platform at the top; this is a bit
+      this.pos = pNext;
+      if (dir === 1 || dir === 3) { this.img = imgHeroClimb }
+    }
 
-  serialize() {
-    return `hero ${this.pos.tileX()} ${this.pos.tileY()}`
-  }
+    // elevators
+    const pBelow = posDir(pCurr, 3)
+    const eBelow = findActor(Elevator, pBelow)
+    console.log({eBelow});
+    // if (dir === 1 && tBelow ===)
 
-  static deserialize(line) {
-    const [type, x, y] = line.split(' ')
-    assert(type === this.name, `expected ${this.name} got ${type}`)
-    return new Hero(new TilePos({x, y}))
+    // move horizontally
+    if (dir === 0 || dir === 2) { this.pos = pNext }
   }
 }
+
+class Block extends Actor {
+  static img = imgBlock
+}
+
+class Gem extends Actor {
+  static img =  imgGem
+}
+
+class Wheel extends Actor { static img = imgWheel }
+class WireH extends Actor { static img = imgWireH }
+class WireV extends Actor { static img = imgWireV }
+
+class Elevator extends Actor {
+  static img = imgElevator
+}
+
+function pairElevators() {
+  allActors(Elevator).forEach(pairElevator)
+}
+
+function pairElevator(e) {
+  // Tries to pair the given elevator. returns whether it was successful
+  if (e.pair) { return true }
+
+  let lastTrace;
+  let trace = e
+  let dir = 1
+  while (true) {
+    lastTrace = trace
+    switch (trace.constructor) {
+      case Elevator: {
+        if (trace === e) {
+          trace = findActor(WireV, posDir(trace.pos, dir))
+          if (!trace) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
+        } else {
+          e.pair = trace
+          trace.pair = e
+          return true
+        }
+      } break
+      case WireV: {
+        trace = findActor([WireV, Wheel, Elevator], posDir(trace.pos, dir))
+        if (!trace) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
+      } break
+      case WireH: {
+        trace = findActor([WireH, Wheel], posDir(trace.pos, dir))
+        if (!trace) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
+      } break
+      case Wheel: {
+        const dirIsVert = (dir === 1 || dir === 3)
+        let dirToTry = dirIsVert ? [0, 2] : [1, 3]
+        let target = dirIsVert ? WireH : WireV
+        const res = dirToTry.map(d=>findActor(target, posDir(trace.pos, d)))
+        assert(res.length === 2)
+        if (!xor(res[0], res[1])) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
+
+        if (res[0]) { trace = res[0]; dir = dirToTry[0] }
+        if (res[1]) { trace = res[1]; dir = dirToTry[1] }
+      } break
+    }
+  }
+}
+
+const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator]
 
 //
 // helpers
@@ -374,6 +414,27 @@ class Hero extends Actor {
 
 function hero() {
   return actors.find(e=>e.constructor===Hero);
+}
+
+function allActors(cst) {
+  // allActors() -> all actors
+  // allActors(Foo) -> all actors with constructor Foo
+  // allActors([Foo, Bar]) -> all actors with constructor Foo or constructor Bar
+  if (!cst) { return actors }
+  if (Array.isArray(cst)) {
+    return actors.filter(a=>cst.includes(a.constructor))
+  } else {
+    return actors.filter(a=>a.constructor===cst)
+  }
+}
+
+function findActor(cst, p) {
+  const as = allActors(cst)
+  if (p) {
+    return as.find(a=>a.pos.toTilePos().equals(p))
+  } else {
+    return as[0]
+  }
 }
 
 function inbounds(p) {

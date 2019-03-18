@@ -16,7 +16,7 @@ function registerListeners() {
     return false
   })
   window.addEventListener("mousewheel", (e) => {
-    cycleBrush(Math.sign(e.wheelDelta))
+    cycleBrush(-Math.sign(e.wheelDelta))
     raf()
     e.preventDefault()
     return false
@@ -171,6 +171,7 @@ async function reset() {
   loadActors()
   deadQueue = [];
 
+  initGame()
   initEditor()
   isPlayerTurn = true;
   bufferedInput = null;

@@ -53,10 +53,25 @@ assert(saneMod(-6, 10) === 4)
 
 function assert(b, msg=null) {
   if (!b) {
-    msg = msg ? msg : "assert error"
+    msg = (msg === null) ? msg : "assert error"
     throw new Error(msg)
   }
 }
+
+// function assertLite(b, msg=null) {
+//   if (!b) {
+//     msg = (msg === null) ? msg : "assert error"
+//     console.warn(msg)
+//   }
+// }
+
+function xor(a, b) {
+  return !!a != !!b
+}
+assert(xor(0, 0) === false)
+assert(xor(0, 1) === true)
+assert(xor(1, 0) === true)
+assert(xor(1, 1) === false)
 
 async function sleep(ms) {
   return new Promise((resolve, reject) => {

@@ -7,9 +7,8 @@ let deserTileName;
 let serTileName;
 
 function initSerTables() {
-  let actorTypes = [Hero, Block, Gem] // TODO should this live here?
   deserActorClass = {}
-  for (let cst of actorTypes) {
+  for (let cst of allActorTypes) {
     deserActorClass[cst.name] = cst
   }
 
