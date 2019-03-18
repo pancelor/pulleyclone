@@ -28,18 +28,21 @@ function registerListeners() {
       return;
     }
     switch (e.key) {
-      case "Enter":
+      case "Enter": {
         reset()
-        break;
+      } break
       case " ":
-      case "Space":
+      case "Space": {
+
+      } break
+      case "Escape": {
         await toggleEditor();
-        break;
-      case "Tab":
+      } break
+      case "Tab": {
         if (editorActive()) {
           switchLayer()
         }
-        break;
+      } break
     }
     e.preventDefault()
     return false
@@ -69,7 +72,7 @@ function registerListeners() {
 
     // This function gets all weird b/c it's running multiple copies
     // of itself at once. One main "thread" plays back any buffered inputs
-    // while many other "threads" overwrite the buffered input
+    // while many other "threads" set the buffered input
     if (!isPlayerTurn) {
       bufferedInput = dir
       return
@@ -163,12 +166,11 @@ async function init() {
 async function reset() {
   loadTiles()
   fitCanvasToTiles()
-  await initTileCache()
 
   loadActors()
   deadQueue = [];
 
-  initGame()
+  await initGame()
   initEditor()
   isPlayerTurn = true;
   bufferedInput = null;

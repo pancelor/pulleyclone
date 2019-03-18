@@ -10,8 +10,10 @@ let deadQueue;
 // main game
 //
 
-function initGame() {
+async function initGame() {
+  await initTileCache()
   pairElevators()
+  await doGravity()
 }
 
 function purgeDead() {
@@ -32,16 +34,23 @@ async function update(dir) {
     hero().update(dir);
     purgeDead();
     raf()
-    await sleep(100)
-    let stuffFell = true
-    while (stuffFell) {
-      stuffFell = actors.some(a=>a.doGravity())
-      raf()
-      await sleep(100)
-    }
-    // purgeDead();
-    // raf()
+    await doGravity()
   }
+}
+
+async function doGravity() {
+  let moreGravity = true
+  while (moreGravity) {
+    await sleep(waitTime)
+    moreGravity = await doGravityOnce()
+    raf()
+  }
+}
+
+async function doGravityOnce() {
+  // returns whether more gravity should happen
+  if (editorActive()) { return false }
+  return actors.some(a=>a.doGravity())
 }
 
 function getCameraOffset() {

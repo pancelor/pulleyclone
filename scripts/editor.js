@@ -7,7 +7,7 @@ function initEditor() {
 async function toggleEditor() {
   if (editorActive()) {
     editor.style.display = "none"
-    await initTileCache()
+    await initGame()
   } else {
     editor.style.display = null
   }
@@ -25,6 +25,7 @@ function buildBrushSelect() {
   } else if (editorLayer === LAYER_ACTOR) {
     buildActorBrushSelect()
   }
+  brushSelect.selectedIndex = 1
 }
 
 function resetBrushSelect() {
