@@ -68,21 +68,15 @@ function registerListeners() {
     if (editorActive()) { return }
     if (!isPlayerTurn) {
       bufferedInput = dir
-      console.log("buffering", dir)
       return
     }
-    console.log(randInt(100000));
     isPlayerTurn = false
     await update(dir)
     assert(isPlayerTurn === false)
     while (bufferedInput !== null) {
       const dir = bufferedInput
       bufferedInput = null
-      console.log("unbuffering", dir);
       await update(dir)
-      if (bufferedInput) {
-        console.log("double-buffered!");
-      }
     }
     isPlayerTurn = true
   })
