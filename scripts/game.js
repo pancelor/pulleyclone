@@ -279,10 +279,8 @@ class Actor {
     drawImg(ctx, this.img, this.pos)
   }
 
-  tryMove(p) {
-    if (!inbounds(p)) { return; }
-    if (getTile(p) === "dirt") { return; }
-    this.pos = p;
+  update(dir) {
+    return false
   }
 
   boundingBox() {
@@ -310,6 +308,9 @@ class Hero extends Actor {
   static img = imgHeroR
 
   update(dir) {
+    const dx = dir === 0 || dir === 2
+    const dy = dir === 1 || dir === 3
+
     const pCurr = this.pos
     const pNext = posDir(pCurr, dir)
     const tCurr = getTile(pCurr)
@@ -321,32 +322,46 @@ class Hero extends Actor {
     if (!inbounds(pNext)) { return false }
     if (tNext === "dirt") { return false }
 
+    const collidables = [Block, Mirror, Gem, Wheel]
+    const coll = findActor(collidables, pNext)
+    if (coll) {
+      if (dy) { return false }
+      assert(dx)
+      if (!coll.update(dir)) { return false }
+      this.pos = pNext
+      return true
+    }
+
     // ladders
     if (dir === 3 && tNext === "ladderPlatform") {
       this.pos = pNext
       this.img = imgHeroClimb
       return true
     }
-    if (tCurr === "ladderPlatform" || tCurr === "ladder") {
-      // if (tCurr === "ladder" && dir === 1) { return false }
-      // the guy will hop up off of bare ladders that have no platform at the top; this is a bit
+    if (dy && tCurr === "ladderPlatform") {
+      this.pos = pNext
+      this.img = imgHeroClimb
+      return true
+    }
+    if (dy && tCurr === "ladder") {
       this.pos = pNext;
-      if (dir === 1 || dir === 3) { this.img = imgHeroClimb }
+      this.img = imgHeroClimb
       return true
     }
 
     // elevators
-    if (dir === 1 || dir === 3) {
+    if (dy) {
       const pBelow = posDir(pCurr, 3)
       const eBelow = findActor(Elevator, pBelow)
       if (eBelow && eBelow.update(dir)) {
-        this.pos = pNext
+        // don't need to update this.pos b/c eBelow will do it for us
+        // this.pos = pNext
         return true
       }
     }
 
     // move horizontally
-    if (dir === 0 || dir === 2) {
+    if (dx) {
       this.pos = pNext
       return true
     }
@@ -438,13 +453,39 @@ class Elevator extends Actor {
     wire.pos = (dir === 1) ? this.pair.pos : this.pos
     this.pos = posNext
     this.pair.pos = pairPosNext
+    if (cargo) {
+      cargo.pos = posDir(this.pos, 1)
+    }
+    if (pairCargo) {
+      pairCargo.pos = posDir(this.pair.pos, 1)
+    }
     return true
   }
 }
 
-class Mirror extends Actor { static img = imgMirrorUL }
+class Mirror extends Actor {
+  static img = imgMirrorUL
 
-const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator]
+  update(dir) {
+    assert(dir === 0 || dir === 2)
+
+    const pCurr = this.pos
+    const pNext = posDir(pCurr, dir)
+    const tCurr = getTile(pCurr)
+    const tNext = getTile(pNext)
+
+    if (!inbounds(pNext)) { return false }
+    if (tNext === "dirt") { return false }
+
+    const collidables = [Block, Mirror, Gem, Wheel, Hero]
+    const coll = findActor(collidables, pNext)
+    if (coll) { return false }
+    this.pos = pNext
+    return true
+  }
+}
+
+const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator, Mirror]
 
 function pairElevators() {
   allActors(Elevator).forEach(e=>e.tryPair())
