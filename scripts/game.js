@@ -33,32 +33,15 @@ async function update(dir) {
     purgeDead();
     raf()
     await sleep(100)
-    while (doGravity()) {
+    let stuffFell = true
+    while (stuffFell) {
+      stuffFell = actors.some(a=>a.doGravity())
       raf()
       await sleep(100)
     }
     // purgeDead();
     // raf()
   }
-}
-
-function doGravity() {
-  const h = hero()
-  if (!h) { return false }
-  const p = h.pos
-  const pUnder = posDir(h.pos, 3)
-  const t = getTile(p)
-  const tUnder = getTile(pUnder)
-
-  if (tUnder === "dirt") { return false }
-  if (tUnder === "platform") { return false }
-  if (tUnder === "ladderPlatform") { return false }
-  if (t === "ladderPlatform") { return false }
-  if (t === "ladder") { return false }
-  if (findActor(Elevator, pUnder)) { return false }
-
-  h.pos = pUnder
-  return true
 }
 
 function getCameraOffset() {
@@ -280,6 +263,12 @@ class Actor {
   }
 
   update(dir) {
+    // returns whether it moved in the given dir
+    return false
+  }
+
+  doGravity() {
+    // returns whether it fell a single tile (otherwise it did nothing)
     return false
   }
 
@@ -366,6 +355,10 @@ class Hero extends Actor {
       return true
     }
   }
+
+  doGravity() {
+    return fallableDoGravity(this, [Elevator, Block, Mirror, Gem])
+  }
 }
 
 class Block extends Actor {
@@ -374,6 +367,15 @@ class Block extends Actor {
 
 class Gem extends Actor {
   static img =  imgGem
+
+  update(dir) {
+    assert(dir === 0 || dir === 2)
+    return pushableUpdate(this, dir, [Block, Mirror, Gem, Wheel, Hero])
+  }
+
+  doGravity() {
+    return fallableDoGravity(this, [Elevator, Block, Mirror, Gem])
+  }
 }
 
 class Wheel extends Actor { static img = imgWheel }
@@ -468,21 +470,45 @@ class Mirror extends Actor {
 
   update(dir) {
     assert(dir === 0 || dir === 2)
-
-    const pCurr = this.pos
-    const pNext = posDir(pCurr, dir)
-    const tCurr = getTile(pCurr)
-    const tNext = getTile(pNext)
-
-    if (!inbounds(pNext)) { return false }
-    if (tNext === "dirt") { return false }
-
-    const collidables = [Block, Mirror, Gem, Wheel, Hero]
-    const coll = findActor(collidables, pNext)
-    if (coll) { return false }
-    this.pos = pNext
-    return true
+    return pushableUpdate(this, dir, [Block, Mirror, Gem, Wheel, Hero])
   }
+
+  doGravity() {
+    return fallableDoGravity(this, [Elevator, Block, Mirror, Gem])
+  }
+}
+
+function fallableDoGravity(that, collidables) {
+  const p = that.pos
+  const pUnder = posDir(that.pos, 3)
+  const t = getTile(p)
+  const tUnder = getTile(pUnder)
+
+  if (tUnder === "dirt") { return false }
+  if (tUnder === "platform") { return false }
+  if (tUnder === "ladderPlatform") { return false }
+  if (t === "ladderPlatform") { return false }
+  if (t === "ladder") { return false }
+  if (findActor(collidables, pUnder)) { return false }
+
+  that.pos = pUnder
+  return true
+}
+
+function pushableUpdate(that, dir, collidables) {
+  const pCurr = that.pos
+  const pNext = posDir(pCurr, dir)
+  const tCurr = getTile(pCurr)
+  const tNext = getTile(pNext)
+
+  if (!inbounds(pNext)) { return false }
+  if (tNext === "dirt") { return false }
+
+  const coll = findActor(collidables, pNext)
+  if (coll) { return false }
+
+  that.pos = pNext
+  return true
 }
 
 const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator, Mirror]
