@@ -1,4 +1,4 @@
-function initEditor() {
+function initEditor() { // TODO: 'init' here is a bad misuse of the word
   editorLayer = LAYER_TILE
   toggleEditor() // start with editor off
   buildBrushSelect()

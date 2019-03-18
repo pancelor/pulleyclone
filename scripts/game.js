@@ -16,8 +16,12 @@ async function initGame() {
   await doGravity()
 }
 
+function uniq(arr) {
+  return [...new Set(arr)]
+}
+
 function purgeDead() {
-  const t1 = deadQueue
+  const t1 = uniq(deadQueue)
   const t2 =  t1.map(dead=>actors.findIndex(e=>e===dead))
   const t3 =  t2.sort((a, b)=>b-a)
               t3.forEach(i=>actors.splice(i, 1));
@@ -32,6 +36,7 @@ function checkWin() {
 async function update(dir) {
   if (!checkWin()) {
     hero().update(dir);
+    light().shine()
     purgeDead();
     raf()
     await doGravity()
@@ -43,6 +48,7 @@ async function doGravity() {
   while (moreGravity) {
     await sleep(waitTime)
     moreGravity = await doGravityOnce()
+    light().shine()
     raf()
   }
 }
@@ -148,7 +154,8 @@ function drawTiles(ctx) {
 }
 
 function drawActors(ctx) {
-  actors.forEach(e=>e.draw(ctx));
+  light().draw(ctx)
+  allActorsExcept(Light).forEach(e=>e.draw(ctx));
 }
 
 function drawGame(ctx) {
@@ -196,6 +203,10 @@ class Pos {
 
   clone() {
     return new this.constructor({x: this.x, y: this.y})
+  }
+
+  str() {
+    return `${this.constructor.name}(${this.x}, ${this.y})`
   }
 }
 
@@ -523,6 +534,19 @@ class Mirror extends Actor {
     }
   }
 
+  bounceDir(dir) {
+    const opp = d=>saneMod(d+2, 4)
+    const inA = opp(this.rot)
+    const inB = opp(this.rot+1)
+    if (dir === inA) {
+      return opp(inB)
+    } else if (dir === inB) {
+      return opp(inA)
+    } else {
+      return null
+    }
+  }
+
   doGravity() {
     return fallableDoGravity(this, [Elevator, Block, Mirror, Gem])
   }
@@ -538,8 +562,59 @@ class Mirror extends Actor {
     rot = int(rot)
     return new (this)(p, rot)
   }
-
 }
+
+class Light extends Actor {
+  static img = imgLight3
+
+  constructor(p) {
+    super(p)
+    this.shine()
+  }
+
+  shine() {
+    // TODO: reflect in the gem
+
+    let dir = 0
+    let pos = this.pos.clone()
+    let nextPos
+    this.path = [pos]
+    while (true) {
+      nextPos = posDir(pos, dir)
+
+      // stop at dirt or oob
+      if (getTile(nextPos) === "dirt" || !inbounds(nextPos)) {
+        break
+      }
+
+      // kill blocks
+      const block = findActor(Block, nextPos)
+      if (block) { deadQueue.push(block) }
+
+      // reflect
+      const mirror = findActor(Mirror, nextPos)
+      if (mirror) {
+        const nextDir = mirror.bounceDir(dir)
+        if (nextDir === null) { break }
+        dir = nextDir
+      }
+
+      this.path.push(nextPos)
+      pos = nextPos
+    }
+  }
+
+  draw(ctx) {
+    assert(this.path.length >= 2, "light path too short")
+    drawImg(ctx, imgLight1, this.path[0])
+    drawImg(ctx, imgLight2, this.path[1])
+    for (const p of this.path.slice(2)) {
+      drawImg(ctx, imgLight3, p)
+    }
+  }
+}
+
+const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator, Mirror, Light]
 
 function fallableDoGravity(that, collidables) {
   const p = that.pos
@@ -574,8 +649,6 @@ function pushableUpdate(that, dir, collidables) {
   return true
 }
 
-const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator, Mirror]
-
 function pairElevators() {
   const es = allActors(Elevator)
   es.forEach(e=>e.pair=null)
@@ -590,6 +663,10 @@ function hero() {
   return actors.find(e=>e.constructor===Hero);
 }
 
+function light() {
+  return actors.find(e=>e.constructor===Light);
+}
+
 function allActors(cst) {
   // allActors() -> all actors
   // allActors(Foo) -> all actors with constructor Foo
@@ -599,6 +676,18 @@ function allActors(cst) {
     return actors.filter(a=>cst.includes(a.constructor))
   } else {
     return actors.filter(a=>a.constructor===cst)
+  }
+}
+
+function allActorsExcept(cst) {
+  // allActorsExcept() -> all actors
+  // allActorsExcept(Foo) -> all actors except those with constructor Foo
+  // allActorsExcept([Foo, Bar]) -> all actors except those with constructor Foo or constructor Bar
+  if (!cst) { return actors }
+  if (Array.isArray(cst)) {
+    return actors.filter(a=>!cst.includes(a.constructor))
+  } else {
+    return actors.filter(a=>a.constructor!==cst)
   }
 }
 

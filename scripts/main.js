@@ -19,8 +19,7 @@ function combo(str) {
       if (part === "ctrl") { return e.ctrlKey }
       else if (part === "alt") { return e.altKey }
       else if (part === "shift") { return e.shiftKey }
-      else if (part.length === 1) {
-        return (e.key === part.toLowerCase())
+      else if (part.length === 1) { return (e.key.toLowerCase() === part.toLowerCase() )
       } else { assert(0, `bad key combo part ${part}`) }
     })
   }
@@ -56,7 +55,8 @@ function registerListeners() {
     }
     switch (e.key) {
       case "Enter": {
-        reset()
+        await reset()
+        await toggleEditor() // TODO: hack b/c initEditor has bad boundaries
       } break
       case "Escape": {
         await toggleEditor()

@@ -102,4 +102,5 @@ const actorData = `
   Mirror 6 11 2
   Mirror 12 11 0
   Hero 5 4
+  Light 3 4
 `
