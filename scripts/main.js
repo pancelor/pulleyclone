@@ -54,9 +54,18 @@ function registerListeners() {
       return false
     }
     switch (e.key) {
-      case "Enter": {
-        await reset()
-        await toggleEditor() // TODO: hack b/c initEditor has bad boundaries
+      case "r":
+      case "R": {
+        if (editorActive()) { return }
+        loadActors()
+        await initGame()
+      } break
+      case "z":
+      case "Z": {
+        if (!isPlayerTurn) { return }
+        undo()
+        raf()
+        return
       } break
       case "Escape": {
         await toggleEditor()
@@ -236,6 +245,8 @@ async function reset() {
 
   initEditor()
   await initGame()
+  toggleEditor() // start with editor off
+
   isPlayerTurn = true;
   bufferedInput = null;
 

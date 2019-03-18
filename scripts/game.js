@@ -4,6 +4,63 @@
 
 let actors;
 let tiles;
+let gameHistory;
+let currentEpoch;
+
+//
+// history / undo
+//
+
+function initHistory() {
+  gameHistory = []
+}
+
+function recordPosition(a) {
+  if (currentEpoch.buffer.some(([aExisting, pos])=>aExisting===a)) { return } // only record the earliest pos per epoch
+  currentEpoch.buffer.push([a, a.pos.clone()])
+}
+
+function startEpoch() {
+  // call this before the player gets control
+  currentEpoch = {}
+  currentEpoch.buffer = []
+}
+function midEpoch() {
+  // call this after the player cedes control but before gravity happens
+  currentEpoch.half1 = currentEpoch.buffer
+  currentEpoch.buffer = []
+}
+function endEpoch() {
+  // call this after gravity is over
+  currentEpoch.half2 = currentEpoch.buffer
+  currentEpoch.buffer = []
+  gameHistory.push(currentEpoch)
+}
+function printEpoch(e) {
+  console.log("epoch");
+  console.log(epochHalfToString(e.half1));
+  console.log(epochHalfToString(e.half2));
+}
+function epochHalfToString(half) {
+  const lines = []
+  lines.push("  half")
+  for (const [a, pos] of half) {
+    lines.push(`    ${a.constructor.name}: ${pos.str()}`)
+  }
+  return lines.join('\n')
+}
+function undo() {
+  if (gameHistory.length === 0) { return }
+  const { half1, half2 } = gameHistory.pop()
+  for (const [a, pos] of half2) {
+    a.pos = pos
+  }
+  for (const [a, pos] of half1) {
+    a.pos = pos
+  }
+  light().shine()
+}
+
 
 //
 // main game
@@ -12,11 +69,8 @@ let tiles;
 async function initGame() {
   await initTileCache()
   pairElevators()
+  initHistory()
   await doGravity()
-}
-
-function uniq(arr) {
-  return [...new Set(arr)]
 }
 
 function checkWin() {
@@ -25,10 +79,13 @@ function checkWin() {
 
 async function update(dir) {
   if (!checkWin()) {
+    startEpoch()
     hero().update(dir);
+    midEpoch()
     light().shine()
     raf()
     await doGravity()
+    endEpoch()
   }
 }
 
@@ -285,6 +342,11 @@ class Actor {
     return false
   }
 
+  setPos(p) {
+    recordPosition(this)
+    this.pos = p
+  }
+
   doGravity() {
     // returns whether it fell a single tile (otherwise it did nothing)
     return false
@@ -330,29 +392,32 @@ class Hero extends Actor {
     if (!inbounds(pNext)) { return false }
     if (tNext === "dirt") { return false }
 
+    // actor collision / pushing
     const collidables = [Block, Mirror, Gem, Wheel]
     const coll = findActor(collidables, pNext)
     if (coll) {
       if (dy) { return false }
       assert(dx)
       if (!coll.update(dir)) { return false }
-      this.pos = pNext
+
+      this.setPos(pNext)
       return true
     }
 
     // ladders
     if (dir === 3 && tNext === "ladderPlatform") {
-      this.pos = pNext
+      this.setPos(pNext)
       this.img = imgHeroClimb
       return true
     }
     if (dy && tCurr === "ladderPlatform") {
-      this.pos = pNext
+      this.setPos(pNext)
       this.img = imgHeroClimb
       return true
     }
     if (dy && tCurr === "ladder") {
-      this.pos = pNext;
+      if (dir === 3 && tNext === "platform") { return false }
+      this.setPos(pNext)
       this.img = imgHeroClimb
       return true
     }
@@ -370,7 +435,7 @@ class Hero extends Actor {
 
     // move horizontally
     if (dx) {
-      this.pos = pNext
+      this.setPos(pNext)
       return true
     }
   }
@@ -467,14 +532,20 @@ class Elevator extends Actor {
     if (dir === 0 || dir === 2) { return false }
     const pairDir = saneMod(dir + 2, 4)
 
-    const possibleCargo = [Hero, Wheel, Mirror, Gem]
-    const cargo = findActor(possibleCargo, posDir(this.pos, 1))
-    const cargo2 = findActor(possibleCargo, posDir(this.pos, 1, 2))
-    const pairCargo = findActor(possibleCargo, posDir(this.pair.pos, 1))
-    const pairCargo2 = findActor(possibleCargo, posDir(this.pair.pos, 1, 2))
+    if (dir === 3 && findActor(Block, this.pos)) { return false }
+    if (pairDir === 3 && findActor(Block, this.pair.pos)) { return false }
 
-    if (cargo && cargo2 && dir === 1) { return false }
-    if (pairCargo && pairCargo2 && pairDir === 1) { return false }
+    const belowCargo = findActor([Mirror, Gem], this.pos)
+    const belowPairCargo = findActor([Mirror, Gem], this.pair.pos)
+    const cargo = findActor([Hero, Mirror, Gem], posDir(this.pos, 1))
+    const pairCargo = findActor([Hero, Mirror, Gem], posDir(this.pair.pos, 1))
+    const aboveCargo = findActor([Wheel, Mirror, Gem], posDir(this.pos, 1, 2))
+    const abovePairCargo = findActor([Wheel, Mirror, Gem], posDir(this.pair.pos, 1, 2))
+
+    if (cargo && aboveCargo && dir === 1) { return false }
+    if (cargo && belowCargo && dir === 3) { return false }
+    if (pairCargo && abovePairCargo && pairDir === 1) { return false }
+    if (pairCargo && belowPairCargo && pairDir === 3) { return false }
 
     const posNext = posDir(this.pos, dir)
     const pairPosNext = posDir(this.pair.pos, pairDir)
@@ -485,14 +556,14 @@ class Elevator extends Actor {
 
     // move
     const wire = findActor(WireV, (dir === 1) ? posNext : pairPosNext)
-    wire.pos = (dir === 1) ? this.pair.pos : this.pos
-    this.pos = posNext
-    this.pair.pos = pairPosNext
+    wire.setPos((dir === 1) ? this.pair.pos : this.pos)
+    this.setPos(posNext)
+    this.pair.setPos(pairPosNext)
     if (cargo) {
-      cargo.pos = posDir(this.pos, 1)
+      cargo.setPos(posDir(this.pos, 1))
     }
     if (pairCargo) {
-      pairCargo.pos = posDir(this.pair.pos, 1)
+      pairCargo.setPos(posDir(this.pair.pos, 1))
     }
     return true
   }
@@ -622,7 +693,7 @@ function fallableDoGravity(that, collidables) {
   if (t === "ladder") { return false }
   if (findActor(collidables, pUnder)) { return false }
 
-  that.pos = pUnder
+  that.setPos(pUnder)
   return true
 }
 
@@ -638,7 +709,7 @@ function pushableUpdate(that, dir, collidables) {
   const coll = findActor(collidables, pNext)
   if (coll) { return false }
 
-  that.pos = pNext
+  that.setPos(pNext)
   return true
 }
 

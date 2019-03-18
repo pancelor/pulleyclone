@@ -35,7 +35,8 @@ option 2: clone project; open index.html; play in browser
   * this makes editing possible on github
 * rethink collision stuff; currently very adhoc. tiles and actors both.
 
-* write undo system
+* undo for .dead changes
+* undo for sprite changes
 * less hacky actor placing - currently it's essentially just another tile layer :/
   * layer of blocks in bottom room is one too short because of this
 * sounds
@@ -43,3 +44,5 @@ option 2: clone project; open index.html; play in browser
   * do pull-style keyboard instead of event interrupts... bah
 
 * write a proper user-facing readme
+
+* make a game with full + robust time-scrubbing that involves lots of actor creation / destruction - the history system in this game is hacky
