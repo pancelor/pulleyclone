@@ -3,7 +3,7 @@ function cls(ctx) {
 }
 
 function drawBkg(ctx) {
-  drawImg(ctx, background, new TilePos({x: 0, y: 0}))
+  drawImg(ctx, imgBackground, new TilePos({x: 0, y: 0}))
 }
 
 function ctxWith(ctx, map, cb) {

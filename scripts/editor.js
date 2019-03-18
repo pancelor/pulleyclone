@@ -1,6 +1,7 @@
 function initEditor() {
-  toggleEditor() // start with editor off
+  // toggleEditor() // start with editor off
   buildBrushSelect()
+  editorLayer = LAYER_TILE
 }
 
 async function toggleEditor() {
@@ -18,17 +19,39 @@ function editorActive() {
 }
 
 function buildBrushSelect() {
-  for (let x of Object.keys(serTileName)){
+  for (let img of tilesList.children){
     const option = document.createElement('option')
-    option.value = x
-    option.innerHTML = x
+    option.value = img.id
+    option.innerHTML = img.id
     brushSelect.appendChild(option)
   }
 }
 
-function cycleBrush() {
-  const L = brushSelect.options.length
-  brushSelect.selectedIndex = (brushSelect.selectedIndex + 1) % L
+const LAYER_TILE = 1
+const LAYER_ACTOR = 2
+function switchLayer() {
+  if (editorLayer === LAYER_TILE) {
+    editorLayer = LAYER_ACTOR
+  } else if (editorLayer === LAYER_ACTOR) {
+    editorLayer = LAYER_TILE
+  }
+}
+
+function saneMod(x, y) {
+  // mod(x, y) returns a number in [0, y), like % should do (but doesn't)
+  x = x % y
+  if (x < 0) { x += y}
+  return x
+}
+assert(saneMod(3, 10) === 3)
+assert(saneMod(0, 10) === 0)
+assert(saneMod(10, 10) === 0)
+assert(saneMod(-6, 10) === 4)
+
+function cycleBrush(delta) {
+  // delta is how many brushes to change by
+  // delta will usually be either -1 or 1
+  brushSelect.selectedIndex = saneMod(brushSelect.selectedIndex + delta, brushSelect.options.length)
   raf()
 }
 

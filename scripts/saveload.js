@@ -1,3 +1,11 @@
+//
+// globals
+//
+
+let deserActorClass;
+let deserTileName;
+let serTileName;
+
 function initSerTables() {
   deserActorClass = {
     "hero": Hero,

@@ -1,4 +1,12 @@
 //
+// globals
+//
+
+let actors;
+let tiles;
+let deadQueue;
+
+//
 // main game
 //
 

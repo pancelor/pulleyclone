@@ -2,15 +2,9 @@
 // globals
 //
 
-let actors;
-let tiles;
-let deadQueue;
 let isPlayerTurn;
 let bufferedInput;
 let mousepos;
-let deserActorClass;
-let deserTileName;
-let serTileName;
 
 //
 // event handlers
@@ -18,6 +12,11 @@ let serTileName;
 
 function registerListeners() {
   window.addEventListener("contextmenu", (e) => {
+    e.preventDefault()
+    return false
+  })
+  window.addEventListener("mousewheel", (e) => {
+    cycleBrush(Math.sign(e.wheelDelta))
     e.preventDefault()
     return false
   })
@@ -37,7 +36,7 @@ function registerListeners() {
         break;
       case "Tab":
         if (editorActive()) {
-          cycleBrush()
+          switchLayer()
         }
         break;
     }
@@ -125,9 +124,9 @@ function click(e) {
   RMB = 1<<1
   MMB = 1<<2
   if (e.buttons & MMB) {
-    eraseTile()
-  } else if (e.buttons & RMB) {
     eyedropTile()
+  } else if (e.buttons & RMB) {
+    eraseTile()
   } else if (e.buttons & LMB) {
     paintTile()
   } else {
