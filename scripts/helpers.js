@@ -122,3 +122,8 @@ function diff(a, b) {
 }
 
 // e.g. addDiffListener("mousewheel", ["timestamp"])
+
+function listen(evName) {
+  window.addEventListener(evName, console.log)
+}
+

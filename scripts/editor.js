@@ -94,6 +94,7 @@ function currentBrushImg() {
     if (name === "erase") { return null }
     return document.getElementById(name)
   } else if (editorLayer === LAYER_ACTOR) {
+    if (suppressBrushPreview) { return null }
     const name = brushSelect.value
     if (name === "erase") { return null }
     return deserActorClass[name].img
@@ -137,9 +138,9 @@ function setTile(p, name) {
   }
 }
 
-function findActorAtPos(p) {
-  return actors.find(a=>pointRectCollision(p, a.boundingBox()))
-}
+// function findActorAtPosPrecise(p) {
+//   return actors.find(a=>pointRectCollision(p, a.boundingBox()))
+// }
 
 function doEyedrop() {
   if (editorLayer === LAYER_TILE) {
@@ -150,7 +151,7 @@ function doEyedrop() {
       brushSelect.value = tileName
     }
   } else if (editorLayer === LAYER_ACTOR) {
-    const a = findActorAtPos(mousepos)
+    const a = findActor(null, mousepos)
     if (!a) {
       brushSelect.selectedIndex = 0
     } else {
@@ -163,11 +164,30 @@ function doErase() {
   if (editorLayer === LAYER_TILE) {
     setTile(mousepos, "erase")
   } else if (editorLayer === LAYER_ACTOR) {
-    const a = findActorAtPos(mousepos)
-    if (a) {
-      deadQueue.push(a)
-      purgeDead() // TODO: abusing dead queue here
-    }
+    const a = findActor(null, mousepos)
+    if (!a) { return }
+    deadQueue.push(a)
+    purgeDead() // TODO: abusing dead queue here
+  } else { assert(0) }
+}
+
+function doFiddle() {
+  // rotate the actor at the mouse pos through dif states
+  if (editorLayer === LAYER_TILE) {
+    // do nothing
+  } else if (editorLayer === LAYER_ACTOR) {
+    const a = findActor(null, mousepos)
+    if (!a) { return }
+    a.fiddle()
+  } else { assert(0) }
+}
+
+function doMove(a) {
+  if (editorLayer === LAYER_TILE) {
+    // do nothing
+  } else if (editorLayer === LAYER_ACTOR) {
+    if (!a) { return }
+    a.pos = mousepos.toTilePos()
   } else { assert(0) }
 }
 

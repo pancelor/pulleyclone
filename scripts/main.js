@@ -15,7 +15,7 @@ function registerListeners() {
     e.preventDefault()
     return false
   })
-  window.addEventListener("mousewheel", (e) => {
+  window.addEventListener("wheel", (e) => {
     cycleBrush(-Math.sign(e.wheelDelta))
     raf()
     e.preventDefault()
@@ -43,6 +43,12 @@ function registerListeners() {
           switchLayer()
         }
       } break
+      case "Alt": {
+        suppressBrushPreview = true
+      } break
+      case "Shift": {
+        suppressBrushPreview = true
+      } break
     }
     e.preventDefault()
     return false
@@ -51,21 +57,31 @@ function registerListeners() {
     let dir;
     switch (e.key) {
       case "d":
-      case "ArrowRight":
+      case "ArrowRight": {
         dir = 0;
-        break;
+      } break
       case "w":
-      case "ArrowUp":
+      case "ArrowUp": {
         dir = 1;
-        break;
+      } break
       case "a":
-      case "ArrowLeft":
+      case "ArrowLeft": {
         dir = 2;
-        break;
+      } break
       case "s":
-      case "ArrowDown":
+      case "ArrowDown": {
         dir = 3;
-        break;
+      } break
+      case "Alt": {
+        suppressBrushPreview = false
+      } break
+      case "Shift": {
+        suppressBrushPreview = false
+        if (actorInFlight) {
+          mouseHeld = false
+          actorInFlight = null
+        }
+      } break
     }
     if (dir === undefined) { return }
     if (editorActive()) { return }
@@ -91,23 +107,20 @@ function registerListeners() {
   canvas.addEventListener("mousemove", (e) => {
     mousepos.x = e.offsetX
     mousepos.y = e.offsetY
+    mouseMove(e)
     raf()
-    if (editorActive() && mousedown) {
-      click(e)
-    }
   })
 
-  let mousedown = false
   canvas.addEventListener("mousedown", (e) => {
-    mousedown = true
-    if (editorActive()) {
-      click(e)
-    }
+    mouseDown(e)
+    mouseMove(e)
+    raf()
     e.preventDefault()
     return false
   })
   canvas.addEventListener("mouseup", (e) => {
-    mousedown = false
+    mouseUp(e)
+    raf()
     e.preventDefault()
     return false
   })
@@ -120,22 +133,50 @@ function registerListeners() {
   rmRowButton.onclick = ()=>modifyTilesDim(0, -1)
 }
 
-function click(e) {
-  assert(editorActive())
+let suppressBrushPreview = false // TODO: really hacky
 
-  LMB = 1<<0
-  RMB = 1<<1
-  MMB = 1<<2
-  if (e.buttons & LMB) {
-    doPaint()
-  } else if (e.buttons & MMB) {
+let mouseHeld = false
+let actorInFlight
+function mouseDown(e) {
+  if (!editorActive()) { return }
+  mouseHeld = true
+  if (e.button === 0) { // 0, 1, 2 for L, M, R
+    if (e.shiftKey) {
+      actorInFlight = findActor(null, mousepos)
+    }
+  }
+}
+function mouseUp(e) {
+  if (!editorActive()) { return }
+  mouseHeld = false
+  if (e.button === 0) { // 0, 1, 2 for L, M, R
+    actorInFlight = null
+  }
+}
+
+function mouseMove(e) {
+  if (!editorActive()) { return }
+  if (!mouseHeld) { return }
+
+  MOUSE_LMB = 1<<0
+  MOUSE_RMB = 1<<1
+  MOUSE_MMB = 1<<2
+
+  if (e.buttons & MOUSE_LMB) {
+    if (e.altKey) {
+      doFiddle()
+    } else if (actorInFlight) {
+      doMove(actorInFlight)
+    } else {
+      doPaint()
+    }
+  } else if (e.buttons & MOUSE_MMB) {
     doEyedrop()
-  } else if (e.buttons & RMB) {
+  } else if (e.buttons & MOUSE_RMB) {
     doErase()
   } else {
     // user must have moused off the window and then released the mouse buttons
   }
-  raf()
 }
 
 //
@@ -170,8 +211,8 @@ async function reset() {
   loadActors()
   deadQueue = [];
 
-  await initGame()
   initEditor()
+  await initGame()
   isPlayerTurn = true;
   bufferedInput = null;
 

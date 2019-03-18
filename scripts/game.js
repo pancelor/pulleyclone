@@ -271,6 +271,11 @@ class Actor {
     drawImg(ctx, this.img, this.pos)
   }
 
+  fiddle() {
+    // rotate through various possible states in the level editor
+    return
+  }
+
   update(dir) {
     // returns whether it moved in the given dir
     return false
@@ -365,6 +370,20 @@ class Hero extends Actor {
     }
   }
 
+  fiddle() {
+    switch (this.img) {
+      case imgHeroR: {
+        this.img = imgHeroClimb
+      } break
+      case imgHeroClimb: {
+        this.img = imgHeroL
+      } break
+      default: {
+        this.img = imgHeroR
+      } break
+    }
+  }
+
   doGravity() {
     return fallableDoGravity(this, [Elevator, Block, Mirror, Gem])
   }
@@ -426,7 +445,7 @@ class Elevator extends Actor {
         case Wheel: {
           const dirIsVert = (dir === 1 || dir === 3)
           let dirToTry = dirIsVert ? [0, 2] : [1, 3]
-          let target = dirIsVert ? WireH : WireV
+          let target = dirIsVert ? [Wheel, WireH] : [Wheel, WireV]
           const res = dirToTry.map(d=>findActor(target, posDir(trace.pos, d)))
           assert(res.length === 2)
           if (!xor(res[0], res[1])) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
@@ -482,6 +501,24 @@ class Mirror extends Actor {
     return pushableUpdate(this, dir, [Block, Mirror, Gem, Wheel, Hero])
   }
 
+  fiddle() {
+    switch (this.img) {
+      case imgMirrorUL: {
+        this.img = imgMirrorUR
+      } break
+      case imgMirrorUR: {
+        this.img = imgMirrorDR
+      } break
+      case imgMirrorDR: {
+        this.img = imgMirrorDL
+      } break
+      default:
+      case imgMirrorDL: {
+        this.img = imgMirrorUL
+      } break
+    }
+  }
+
   doGravity() {
     return fallableDoGravity(this, [Elevator, Block, Mirror, Gem])
   }
@@ -523,7 +560,9 @@ function pushableUpdate(that, dir, collidables) {
 const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator, Mirror]
 
 function pairElevators() {
-  allActors(Elevator).forEach(e=>e.tryPair())
+  const es = allActors(Elevator)
+  es.forEach(e=>e.pair=null)
+  es.forEach(e=>e.tryPair())
 }
 
 //
@@ -549,7 +588,7 @@ function allActors(cst) {
 function findActor(cst, p) {
   const as = allActors(cst)
   if (p) {
-    return as.find(a=>a.pos.toTilePos().equals(p))
+    return as.find(a=>a.pos.toTilePos().equals(p.toTilePos()))
   } else {
     return as[0]
   }
