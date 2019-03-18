@@ -96,18 +96,15 @@ function registerListeners() {
 
   let mousedown = false
   canvas.addEventListener("mousedown", (e) => {
-    e.preventDefault()
     mousedown = true
-    if (editorActive) {
+    if (editorActive()) {
       click(e)
     }
     e.preventDefault()
     return false
   })
   canvas.addEventListener("mouseup", (e) => {
-    e.preventDefault()
     mousedown = false
-    canvas.focus()
     e.preventDefault()
     return false
   })

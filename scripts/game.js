@@ -55,6 +55,7 @@ function doGravity() {
   if (tUnder === "ladderPlatform") { return false }
   if (t === "ladderPlatform") { return false }
   if (t === "ladder") { return false }
+  if (findActor(Elevator, pUnder)) { return false }
 
   h.pos = pUnder
   return true
@@ -255,12 +256,12 @@ class CanvasPos extends Pos {
   }
 }
 
-function posDir(p, dir) {
+function posDir(p, dir, len=1) {
   const dx = [1,0,-1,0][dir];
   const dy = [0,-1,0,1][dir];
   return p = new (p.constructor)({
-    x: p.tileX() + dx,
-    y: p.tileY() + dy,
+    x: p.tileX() + len*dx,
+    y: p.tileY() + len*dy,
   })
 }
 
@@ -317,29 +318,38 @@ class Hero extends Actor {
     if (dir === 0) { this.img = imgHeroR }
     if (dir === 2) { this.img = imgHeroL }
 
-    if (!inbounds(pNext)) { return }
-    if (tNext === "dirt") { return }
+    if (!inbounds(pNext)) { return false }
+    if (tNext === "dirt") { return false }
 
     // ladders
     if (dir === 3 && tNext === "ladderPlatform") {
       this.pos = pNext
       this.img = imgHeroClimb
+      return true
     }
     if (tCurr === "ladderPlatform" || tCurr === "ladder") {
-      // if (tCurr === "ladder" && dir === 1) { return }
+      // if (tCurr === "ladder" && dir === 1) { return false }
       // the guy will hop up off of bare ladders that have no platform at the top; this is a bit
       this.pos = pNext;
       if (dir === 1 || dir === 3) { this.img = imgHeroClimb }
+      return true
     }
 
     // elevators
-    const pBelow = posDir(pCurr, 3)
-    const eBelow = findActor(Elevator, pBelow)
-    console.log({eBelow});
-    // if (dir === 1 && tBelow ===)
+    if (dir === 1 || dir === 3) {
+      const pBelow = posDir(pCurr, 3)
+      const eBelow = findActor(Elevator, pBelow)
+      if (eBelow && eBelow.update(dir)) {
+        this.pos = pNext
+        return true
+      }
+    }
 
     // move horizontally
-    if (dir === 0 || dir === 2) { this.pos = pNext }
+    if (dir === 0 || dir === 2) {
+      this.pos = pNext
+      return true
+    }
   }
 }
 
@@ -357,56 +367,88 @@ class WireV extends Actor { static img = imgWireV }
 
 class Elevator extends Actor {
   static img = imgElevator
-}
 
-function pairElevators() {
-  allActors(Elevator).forEach(pairElevator)
-}
+  tryPair() {
+    // Tries to pair this elevator
+    // returns whether it was successful
+    if (this.pair) { return true }
 
-function pairElevator(e) {
-  // Tries to pair the given elevator. returns whether it was successful
-  if (e.pair) { return true }
-
-  let lastTrace;
-  let trace = e
-  let dir = 1
-  while (true) {
-    lastTrace = trace
-    switch (trace.constructor) {
-      case Elevator: {
-        if (trace === e) {
-          trace = findActor(WireV, posDir(trace.pos, dir))
+    let lastTrace;
+    let trace = this
+    let dir = 1
+    while (true) {
+      lastTrace = trace
+      switch (trace.constructor) {
+        case Elevator: {
+          if (trace === this) {
+            trace = findActor(WireV, posDir(trace.pos, dir))
+            if (!trace) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
+          } else {
+            this.pair = trace
+            trace.pair = this
+            return true
+          }
+        } break
+        case WireV: {
+          trace = findActor([WireV, Wheel, Elevator], posDir(trace.pos, dir))
           if (!trace) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
-        } else {
-          e.pair = trace
-          trace.pair = e
-          return true
-        }
-      } break
-      case WireV: {
-        trace = findActor([WireV, Wheel, Elevator], posDir(trace.pos, dir))
-        if (!trace) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
-      } break
-      case WireH: {
-        trace = findActor([WireH, Wheel], posDir(trace.pos, dir))
-        if (!trace) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
-      } break
-      case Wheel: {
-        const dirIsVert = (dir === 1 || dir === 3)
-        let dirToTry = dirIsVert ? [0, 2] : [1, 3]
-        let target = dirIsVert ? WireH : WireV
-        const res = dirToTry.map(d=>findActor(target, posDir(trace.pos, d)))
-        assert(res.length === 2)
-        if (!xor(res[0], res[1])) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
+        } break
+        case WireH: {
+          trace = findActor([WireH, Wheel], posDir(trace.pos, dir))
+          if (!trace) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
+        } break
+        case Wheel: {
+          const dirIsVert = (dir === 1 || dir === 3)
+          let dirToTry = dirIsVert ? [0, 2] : [1, 3]
+          let target = dirIsVert ? WireH : WireV
+          const res = dirToTry.map(d=>findActor(target, posDir(trace.pos, d)))
+          assert(res.length === 2)
+          if (!xor(res[0], res[1])) { console.warn("bad elevator connection from", lastTrace.serialize()); return false }
 
-        if (res[0]) { trace = res[0]; dir = dirToTry[0] }
-        if (res[1]) { trace = res[1]; dir = dirToTry[1] }
-      } break
+          if (res[0]) { trace = res[0]; dir = dirToTry[0] }
+          if (res[1]) { trace = res[1]; dir = dirToTry[1] }
+        } break
+      }
     }
+  }
+
+  update(dir) {
+    if (!this.pair) { return false }
+    if (dir === 0 || dir === 2) { return false }
+    const pairDir = saneMod(dir + 2, 4)
+
+    const possibleCargo = [Hero, Wheel, Mirror, Gem]
+    const cargo = findActor(possibleCargo, posDir(this.pos, 1))
+    const cargo2 = findActor(possibleCargo, posDir(this.pos, 1, 2))
+    const pairCargo = findActor(possibleCargo, posDir(this.pair.pos, 1))
+    const pairCargo2 = findActor(possibleCargo, posDir(this.pair.pos, 1, 2))
+
+    if (cargo && cargo2 && dir === 1) { return false }
+    if (pairCargo && pairCargo2 && pairDir === 1) { return false }
+
+    const posNext = posDir(this.pos, dir)
+    const pairPosNext = posDir(this.pair.pos, pairDir)
+
+    // check *current* (not next) positions b/c elevators can actually go one tile into dirt
+    if (getTile(this.pos) === "dirt" && dir === 3) { return false }
+    if (getTile(this.pair.pos) === "dirt" && pairDir === 3) { return false }
+
+    // move
+    const wire = findActor(WireV, (dir === 1) ? posNext : pairPosNext)
+    wire.pos = (dir === 1) ? this.pair.pos : this.pos
+    this.pos = posNext
+    this.pair.pos = pairPosNext
+    return true
   }
 }
 
+class Mirror extends Actor { static img = imgMirrorUL }
+
 const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator]
+
+function pairElevators() {
+  allActors(Elevator).forEach(e=>e.tryPair())
+}
 
 //
 // helpers

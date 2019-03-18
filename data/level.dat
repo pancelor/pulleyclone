@@ -33,7 +33,6 @@ const tileData = `
 `
 
 const actorData = `
-  Hero 2 4
   Gem 6 20
   Elevator 6 5
   Elevator 9 7
@@ -97,4 +96,5 @@ const actorData = `
   Elevator 5 18
   Elevator 9 18
   Elevator 13 21
+  Hero 5 4
 `
