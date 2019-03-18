@@ -27,7 +27,6 @@ async function update(dir) {
     }
     // purgeDead();
     // raf()
-    isPlayerTurn = true;
   }
 }
 

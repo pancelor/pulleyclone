@@ -6,6 +6,7 @@ let actors;
 let tiles;
 let deadQueue;
 let isPlayerTurn;
+let bufferedInput;
 let mousepos;
 let deserActorClass;
 let deserTileName;
@@ -63,11 +64,27 @@ function registerListeners() {
         dir = 3;
         break;
     }
-    if (editorActive()) { return }
-    if (!isPlayerTurn) { return }
     if (dir === undefined) { return }
+    if (editorActive()) { return }
+    if (!isPlayerTurn) {
+      bufferedInput = dir
+      console.log("buffering", dir)
+      return
+    }
+    console.log(randInt(100000));
     isPlayerTurn = false
     await update(dir)
+    assert(isPlayerTurn === false)
+    while (bufferedInput !== null) {
+      const dir = bufferedInput
+      bufferedInput = null
+      console.log("unbuffering", dir);
+      await update(dir)
+      if (bufferedInput) {
+        console.log("double-buffered!");
+      }
+    }
+    isPlayerTurn = true
   })
 
   canvas.addEventListener("mousemove", (e) => {
@@ -153,6 +170,7 @@ async function init() {
 
   initEditor()
   isPlayerTurn = true;
+  bufferedInput = null;
 
   raf()
 }
