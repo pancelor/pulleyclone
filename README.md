@@ -12,12 +12,11 @@ option 2: clone project; open main.html; play in browser
 
 * load/save into local storage? and then import/export to user disk.
   * this makes editing possible on github
-* decide frd what tiles are... seems like they're mainly some static sprites and a full-screen collision mask? like in celeste?
+* rethink collision stuff; currently very adhoc. tiles and actors both.
 
 * light!
-* space to drag objects around
-* less hacky actor placing - currently it's essentially just another tile layer :/
 * write undo system
+* less hacky actor placing - currently it's essentially just another tile layer :/
 * make game run on a frame clock
   * do pull-style keyboard instead of event interrupts... bah
 
