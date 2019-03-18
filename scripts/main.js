@@ -66,6 +66,10 @@ function registerListeners() {
     }
     if (dir === undefined) { return }
     if (editorActive()) { return }
+
+    // This function gets all weird b/c it's running multiple copies
+    // of itself at once. One main "thread" plays back any buffered inputs
+    // while many other "threads" overwrite the buffered input
     if (!isPlayerTurn) {
       bufferedInput = dir
       return
