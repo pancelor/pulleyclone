@@ -15,23 +15,38 @@ function checkWin() {
   return false;
 }
 
-function update(dir) {
+async function update(dir) {
   if (!checkWin()) {
     hero().update(dir);
     purgeDead();
     raf()
-    setTimeout(() => {
-      // TODO: do post-player updates here
-      doGravity()
-      // purgeDead();
+    await sleep(100)
+    while (doGravity()) {
       raf()
-      isPlayerTurn = true;
-    }, 100);
+      await sleep(100)
+    }
+    // purgeDead();
+    // raf()
+    isPlayerTurn = true;
   }
 }
 
 function doGravity() {
+  const h = hero()
+  if (!h) { return false }
+  const p = h.pos
+  const pUnder = positionInDirection(h.pos, 3)
+  const t = getTile(p)
+  const tUnder = getTile(pUnder)
 
+  if (tUnder === "dirt") { return false }
+  if (tUnder === "platform") { return false }
+  if (tUnder === "ladderPlatform") { return false }
+  if (t === "ladderPlatform") { return false }
+  if (t === "ladder") { return false }
+
+  h.pos = pUnder
+  return true
 }
 
 function getCameraOffset() {

@@ -21,7 +21,7 @@ function registerListeners() {
     return false
   })
 
-  window.addEventListener("keydown", (e) => {
+  window.addEventListener("keydown", async (e) => {
     if (/*e.key === 'r' &&*/ e.ctrlKey) {
       // let user reload the page; preventDefault on all else
       return;
@@ -32,7 +32,7 @@ function registerListeners() {
         break;
       case " ":
       case "Space":
-        toggleEditor(); // NOTE: this is async, but we're not gonna care about it
+        await toggleEditor();
         break;
       case "Tab":
         if (editorActive()) {
@@ -43,7 +43,7 @@ function registerListeners() {
     e.preventDefault()
     return false
   })
-  window.addEventListener("keyup", (e) => {
+  window.addEventListener("keyup", async (e) => {
     let dir;
     switch (e.key) {
       case "d":
@@ -67,7 +67,7 @@ function registerListeners() {
     if (!isPlayerTurn) { return }
     if (dir === undefined) { return }
     isPlayerTurn = false
-    update(dir)
+    await update(dir)
   })
 
   canvas.addEventListener("mousemove", (e) => {

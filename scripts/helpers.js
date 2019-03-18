@@ -40,3 +40,9 @@ function assert(b, msg=null) {
     throw new Error(msg)
   }
 }
+
+async function sleep(ms) {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, ms)
+  })
+}
