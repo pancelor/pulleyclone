@@ -4,7 +4,6 @@
 
 let actors;
 let tiles;
-let deadQueue;
 
 //
 // main game
@@ -20,15 +19,6 @@ function uniq(arr) {
   return [...new Set(arr)]
 }
 
-function purgeDead() {
-  const t1 = uniq(deadQueue)
-  const t2 =  t1.map(dead=>actors.findIndex(e=>e===dead))
-  const t3 =  t2.sort((a, b)=>b-a)
-              t3.forEach(i=>actors.splice(i, 1));
-  // if(t3.length) {console.log({t1,t2,t3});}
-  deadQueue = [];
-}
-
 function checkWin() {
   return false;
 }
@@ -37,7 +27,6 @@ async function update(dir) {
   if (!checkWin()) {
     hero().update(dir);
     light().shine()
-    purgeDead();
     raf()
     await doGravity()
   }
@@ -102,12 +91,13 @@ function setTilesDim(newWidth, newHeight) {
       tiles[rr][cc] = (rr >= oldNrr || cc >= oldNcc) ? "erase" : oldTiles[rr][cc];
     }
   }
+  let deadQueue = []
   for (let a of actors) {
     if (a.pos.tileRR() >= nrr || a.pos.tileCC() >= ncc) {
       deadQueue.push(a)
     }
   }
-  purgeDead() // HACK: we're kinda abusing the dead queue here
+  destroyActors(deadQueue)
   // const after = exportTilesString();
   // console.log(before)
   // console.log(after);
@@ -140,7 +130,6 @@ function drawTilesCached(ctx) {
 }
 
 function drawTiles(ctx) {
-  drawBkg(ctx)
   const {width: ncc, height: nrr} = tilesDim()
   for (let rr = 0; rr < nrr; rr++) {
     for (let cc = 0; cc < ncc; cc++) {
@@ -154,13 +143,14 @@ function drawTiles(ctx) {
 }
 
 function drawActors(ctx) {
-  light().draw(ctx)
   allActorsExcept(Light).forEach(e=>e.draw(ctx));
 }
 
 function drawGame(ctx) {
   // const offset = getCameraOffset()
   // ctx.translate(offset.x, offset.y)
+  drawBkg(ctx);
+  light().draw(ctx)
   drawTilesCached(ctx);
   drawActors(ctx);
   // ctx.translate(-offset.x, -offset.y)
@@ -276,10 +266,13 @@ class Actor {
   constructor(pos) {
     this.pos = pos
     this.img = this.constructor.img
+    this.dead = false
   }
 
   draw(ctx){
-    drawImg(ctx, this.img, this.pos)
+    if (!this.dead) {
+      drawImg(ctx, this.img, this.pos)
+    }
   }
 
   fiddle() {
@@ -589,7 +582,7 @@ class Light extends Actor {
 
       // kill blocks
       const block = findActor(Block, nextPos)
-      if (block) { deadQueue.push(block) }
+      if (block) { block.dead = true }
 
       // reflect
       const mirror = findActor(Mirror, nextPos)
@@ -694,7 +687,7 @@ function allActorsExcept(cst) {
 function findActor(cst, p) {
   const as = allActors(cst)
   if (p) {
-    return as.find(a=>a.pos.toTilePos().equals(p.toTilePos()))
+    return as.find(a=>!a.dead && a.pos.toTilePos().equals(p.toTilePos()))
   } else {
     return as[0]
   }
@@ -705,10 +698,6 @@ function inbounds(p) {
   const {width, height} = tilesDim()
   if (x == null || y == null) { return false }
   return 0 <= x && x < width && 0 <= y && y < height
-}
-
-function locChecker(p) {
-  return (other) => p.equals(other.pos)
 }
 
 function tileAtIncludes(p, names){

@@ -233,7 +233,6 @@ async function reset() {
   fitCanvasToTiles()
 
   loadActors()
-  deadQueue = [];
 
   initEditor()
   await initGame()

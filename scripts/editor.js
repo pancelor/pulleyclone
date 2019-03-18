@@ -145,6 +145,16 @@ function setTile(p, name) {
 //   return actors.find(a=>pointRectCollision(p, a.boundingBox()))
 // }
 
+function destroyActors(arr) {
+  assert(editorActive())
+  if (!Array.isArray(arr)) { arr = [arr] }
+
+  for (const a of arr) {
+    const ix = actors.findIndex(e=>e===a)
+    actors.splice(ix, 1);
+  }
+}
+
 function doEyedrop() {
   if (editorLayer === LAYER_TILE) {
     let tileName = getTile(mousepos)
@@ -169,8 +179,7 @@ function doErase() {
   } else if (editorLayer === LAYER_ACTOR) {
     const a = findActor(null, mousepos)
     if (!a) { return }
-    deadQueue.push(a)
-    purgeDead() // TODO: abusing dead queue here
+    destroyActors(a)
   } else { assert(0) }
 }
 
