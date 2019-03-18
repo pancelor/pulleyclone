@@ -33,6 +33,23 @@ function clamp(x, a, b) {
   if (x > b) { return b }
   return x
 }
+assert(clamp(0, 3, 10) === 3)
+assert(clamp(3, 3, 10) === 3)
+assert(clamp(5, 3, 10) === 5)
+assert(clamp(10, 3, 10) === 10)
+assert(clamp(11, 3, 10) === 10)
+assert(clamp(-5, 3, 10) === 3)
+
+function saneMod(x, y) {
+  // mod(x, y) returns a number in [0, y), like % should do (but doesn't)
+  x = x % y
+  if (x < 0) { x += y}
+  return x
+}
+assert(saneMod(3, 10) === 3)
+assert(saneMod(0, 10) === 0)
+assert(saneMod(10, 10) === 0)
+assert(saneMod(-6, 10) === 4)
 
 function assert(b, msg=null) {
   if (!b) {

@@ -33,6 +33,6 @@ const tileData = `
 `
 
 const actorData = `
-  hero 2 4
-  gem 6 20
+  Hero 2 4
+  Gem 6 20
 `

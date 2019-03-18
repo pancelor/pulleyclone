@@ -17,6 +17,7 @@ function registerListeners() {
   })
   window.addEventListener("mousewheel", (e) => {
     cycleBrush(Math.sign(e.wheelDelta))
+    raf()
     e.preventDefault()
     return false
   })
@@ -28,7 +29,7 @@ function registerListeners() {
     }
     switch (e.key) {
       case "Enter":
-        init()
+        reset()
         break;
       case " ":
       case "Space":
@@ -120,17 +121,19 @@ function registerListeners() {
 }
 
 function click(e) {
+  assert(editorActive())
+
   LMB = 1<<0
   RMB = 1<<1
   MMB = 1<<2
-  if (e.buttons & MMB) {
-    eyedropTile()
+  if (e.buttons & LMB) {
+    doPaint()
+  } else if (e.buttons & MMB) {
+    doEyedrop()
   } else if (e.buttons & RMB) {
-    eraseTile()
-  } else if (e.buttons & LMB) {
-    paintTile()
+    doErase()
   } else {
-    assert(0)
+    // user must have moused off the window and then released the mouse buttons
   }
   raf()
 }
@@ -157,7 +160,10 @@ async function init() {
   initSerTables()
   registerListeners()
   mousepos = new CanvasPos({x: null, y: null});
+  await reset()
+}
 
+async function reset() {
   loadTiles()
   fitCanvasToTiles()
   await initTileCache()

@@ -166,6 +166,15 @@ function drawGame(ctx) {
   }
 }
 
+function pointRectCollision(p, rect) {
+  const {x, y} = p.toCanvasPos()
+  const x0 = rect.x
+  const y0 = rect.y
+  const x1 = rect.x + rect.w
+  const y1 = rect.y + rect.h
+  return x0 <= x && x < x1 && y0 <= y && y < y1
+}
+
 //
 // classes
 //
@@ -186,6 +195,10 @@ class Pos {
   equals(other) {
     if (this.constructor !== other.constructor) { return false }
     return this.x === other.x && this.y === other.y
+  }
+
+  clone() {
+    return new this.constructor({x: this.x, y: this.y})
   }
 }
 
@@ -252,9 +265,9 @@ function positionInDirection(p, dir) {
 //
 
 class Actor {
-  constructor(x, y, img) {
-    this.pos = new TilePos({x, y});
-    this.img = img;
+  constructor(pos, img) {
+    this.pos = pos
+    this.img = this.constructor.img
   }
 
   draw(ctx){
@@ -266,12 +279,20 @@ class Actor {
     if (getTile(p) === "dirt") { return; }
     this.pos = p;
   }
+
+  boundingBox() {
+    assert(this.constructor.img !== null, `actor ${this.constructor} has no img`)
+    return {
+      x: this.pos.canvasX(),
+      y: this.pos.canvasY(),
+      w: this.constructor.img.width*imgScale,
+      h: this.constructor.img.height*imgScale,
+    }
+  }
 }
 
 class Block extends Actor {
-  constructor(x, y) {
-    super(x, y, imgBlock);
-  }
+  static img = imgBlock
 
   serialize() {
     return `block ${this.pos.tileX()} ${this.pos.tileY()}`
@@ -279,15 +300,13 @@ class Block extends Actor {
 
   static deserialize(line) {
     const [type, x, y] = line.split(' ')
-    assert(type === "block", `expected block got ${type}`)
-    return new Block(x, y);
+    assert(type === this.name, `expected ${this.name} got ${type}`)
+    return new Block(new TilePos({x, y}))
   }
 }
 
 class Gem extends Actor {
-  constructor(x, y) {
-    super(x, y, imgGem);
-  }
+  static img = imgGem
 
   serialize() {
     return `gem ${this.pos.tileX()} ${this.pos.tileY()}`
@@ -295,15 +314,13 @@ class Gem extends Actor {
 
   static deserialize(line) {
     const [type, x, y] = line.split(' ')
-    assert(type === "gem", `expected gem got ${type}`)
-    return new Gem(x, y);
+    assert(type === this.name, `expected ${this.name} got ${type}`)
+    return new Gem(new TilePos({x, y}))
   }
 }
 
 class Hero extends Actor {
-  constructor(x, y) {
-    super(x, y, imgHeroR, 4, 1);
-  }
+  static img = imgHeroR
 
   update(dir) {
     if (this.canMove(dir)) {
@@ -346,8 +363,8 @@ class Hero extends Actor {
 
   static deserialize(line) {
     const [type, x, y] = line.split(' ')
-    assert(type === "hero", `expected hero got ${type}`)
-    return new Hero(x, y);
+    assert(type === this.name, `expected ${this.name} got ${type}`)
+    return new Hero(new TilePos({x, y}))
   }
 }
 

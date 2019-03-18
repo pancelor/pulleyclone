@@ -7,10 +7,10 @@ let deserTileName;
 let serTileName;
 
 function initSerTables() {
-  deserActorClass = {
-    "hero": Hero,
-    "block": Block,
-    "gem": Gem,
+  let actorTypes = [Hero, Block, Gem] // TODO should this live here?
+  deserActorClass = {}
+  for (let cst of actorTypes) {
+    deserActorClass[cst.name] = cst
   }
 
   serTileName = {}

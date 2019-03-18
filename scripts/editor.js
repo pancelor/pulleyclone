@@ -1,7 +1,7 @@
 function initEditor() {
+  editorLayer = LAYER_TILE
   // toggleEditor() // start with editor off
   buildBrushSelect()
-  editorLayer = LAYER_TILE
 }
 
 async function toggleEditor() {
@@ -19,11 +19,37 @@ function editorActive() {
 }
 
 function buildBrushSelect() {
+  resetBrushSelect()
+  if (editorLayer === LAYER_TILE) {
+    buildTileBrushSelect()
+  } else if (editorLayer === LAYER_ACTOR) {
+    buildActorBrushSelect()
+  }
+}
+
+function resetBrushSelect() {
+  const x = document.createElement('select')
+  x.id = brushSelect.id
+  brushSelect.replaceWith(x)
+}
+
+function addBrushSelectOption(name) {
+  const option = document.createElement('option')
+  option.value = name
+  option.innerHTML = name
+  brushSelect.appendChild(option)
+}
+
+function buildActorBrushSelect() {
+  addBrushSelectOption("erase")
+  for (let name of Object.keys(deserActorClass)){
+    addBrushSelectOption(name)
+  }
+}
+
+function buildTileBrushSelect() {
   for (let img of tilesList.children){
-    const option = document.createElement('option')
-    option.value = img.id
-    option.innerHTML = img.id
-    brushSelect.appendChild(option)
+    addBrushSelectOption(img.id)
   }
 }
 
@@ -35,24 +61,13 @@ function switchLayer() {
   } else if (editorLayer === LAYER_ACTOR) {
     editorLayer = LAYER_TILE
   }
+  buildBrushSelect()
 }
-
-function saneMod(x, y) {
-  // mod(x, y) returns a number in [0, y), like % should do (but doesn't)
-  x = x % y
-  if (x < 0) { x += y}
-  return x
-}
-assert(saneMod(3, 10) === 3)
-assert(saneMod(0, 10) === 0)
-assert(saneMod(10, 10) === 0)
-assert(saneMod(-6, 10) === 4)
 
 function cycleBrush(delta) {
   // delta is how many brushes to change by
   // delta will usually be either -1 or 1
   brushSelect.selectedIndex = saneMod(brushSelect.selectedIndex + delta, brushSelect.options.length)
-  raf()
 }
 
 function drawGrid(ctx) {
@@ -72,26 +87,39 @@ function drawGrid(ctx) {
   }
 }
 
-function drawBrush(ctx) {
-  // drawCircle(ctx, mousepos, 2)
+function currentBrushImg() {
+  if (editorLayer === LAYER_TILE) {
+    const name = brushSelect.value
+    if (name === "erase") { return null }
+    return document.getElementById(name)
+  } else if (editorLayer === LAYER_ACTOR) {
+    const name = brushSelect.value
+    if (name === "erase") { return null }
+    return deserActorClass[name].img
+  } else { assert(0) }
+}
 
-  const img = document.getElementById(brushSelect.value)
-  ctxWith(ctx, {globalAlpha: 0.50}, () => {
-    if (inbounds(mousepos)) {
-      drawImg(ctx, img, mousepos.toTilePos())
-    }
-  })
+function drawBrush(ctx) {
+  const img = currentBrushImg()
+  if (img && inbounds(mousepos)) {
+    drawImg(ctx, img, mousepos.toTilePos())
+  }
 }
 
 function drawEditor(ctx) {
-  drawTiles(ctx)
-  ctxWith(ctx, {globalAlpha: 0.850}, () => {
-    drawActors(ctx)
-  })
+  let globalAlpha
+
+  ctxWith(ctx, {fillStyle: "gray"}, cls)
+
+  globalAlpha = (editorLayer === LAYER_TILE) ? 1 : 0.6
+  ctxWith(ctx, {globalAlpha}, drawTiles)
+
+  globalAlpha = (editorLayer === LAYER_ACTOR) ? 1 : 0.6
+  ctxWith(ctx, {globalAlpha}, drawActors)
 
   ctxWith(ctx, {globalAlpha: 0.75, strokeStyle: "gray"}, drawGrid)
 
-  drawBrush(ctx)
+  ctxWith(ctx, {globalAlpha: 0.80}, drawBrush)
 }
 
 function getTile(p) {
@@ -108,20 +136,49 @@ function setTile(p, name) {
   }
 }
 
-function eyedropTile() {
-  let tileName = getTile(mousepos)
-  if (tileName === null) {
-    brushSelect.selectedIndex = 0
-  } else {
-    brushSelect.value = tileName
-  }
+function findActorAtPos(p) {
+  return actors.find(a=>pointRectCollision(p, a.boundingBox()))
 }
 
-function eraseTile() {
-  setTile(mousepos, "erase")
+function doEyedrop() {
+  if (editorLayer === LAYER_TILE) {
+    let tileName = getTile(mousepos)
+    if (tileName === null) {
+      brushSelect.selectedIndex = 0
+    } else {
+      brushSelect.value = tileName
+    }
+  } else if (editorLayer === LAYER_ACTOR) {
+    const a = findActorAtPos(mousepos)
+    if (!a) {
+      brushSelect.selectedIndex = 0
+    } else {
+      brushSelect.value = a.constructor.name
+    }
+  } else { assert(0) }
 }
 
-function paintTile() {
-  const name = brushSelect.value
-  setTile(mousepos, name)
+function doErase() {
+  if (editorLayer === LAYER_TILE) {
+    setTile(mousepos, "erase")
+  } else if (editorLayer === LAYER_ACTOR) {
+    const a = findActorAtPos(mousepos)
+    if (a) {
+      deadQueue.push(a)
+      purgeDead() // TODO: abusing dead queue here
+    }
+  } else { assert(0) }
+}
+
+function doPaint() {
+  if (editorLayer === LAYER_TILE) {
+    const name = brushSelect.value
+    setTile(mousepos, name)
+  } else if (editorLayer === LAYER_ACTOR) {
+    doErase() // TODO: hacky
+    const name = brushSelect.value
+    if (name === "erase") { return null }
+    const cst = deserActorClass[name]
+    actors.push(new cst(mousepos.toTilePos()))
+  } else { assert(0) }
 }
