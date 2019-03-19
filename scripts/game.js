@@ -19,24 +19,24 @@ async function initGame() {
 }
 
 let gameWon
-function winGame() {
+function maybeWinGame(winObj) {
+  if (!winObj) { return false }
   gameWon = true
+  winObj.kill()
   TextSplash.singleton.set("You win!", "#0094FF")
-}
-function checkWin() {
-  return gameWon;
+  return true
 }
 
 async function update(dir) {
-  if (!checkWin()) {
-    startEpoch()
-    hero().update(dir);
-    midEpoch()
-    light().shine()
-    raf()
-    await doGravity()
-    endEpoch()
-  }
+  assert(!editorActive())
+
+  startEpoch()
+  hero().update(dir);
+  midEpoch()
+  light().shine()
+  raf()
+  await doGravity()
+  endEpoch()
 }
 
 async function doGravity() {
@@ -437,6 +437,9 @@ class Hero extends Actor {
 
     // move horizontally
     if (dx) {
+      if (tNext === "ladder" || tNext === "ladderPlatform") {
+        this.setImg(imgHeroClimb)
+      }
       this.setPos(pNext)
       return true
     }
@@ -471,7 +474,7 @@ class Gem extends Actor {
   update(dir) {
     assert(dir === 0 || dir === 2)
     const res = pushableUpdate(this, dir, [Block, Mirror, Gem, Wheel, Hero])
-    if (findActor(Win, this.pos)) { winGame() }
+    maybeWinGame(findActor(Win, this.pos))
     return res
   }
 
@@ -799,7 +802,7 @@ class TextSplash {
     this.closed = false
   }
 
-  close() {
+  maybeClose() {
     // returns whether it changed to closed
     const wasClosedAlready = this.closed
     this.closed = true

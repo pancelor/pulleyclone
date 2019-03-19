@@ -56,7 +56,7 @@ function registerListeners() {
       return false
     }
 
-    if (TextSplash.singleton.close()) { raf() }
+    if (TextSplash.singleton.maybeClose()) { raf() }
 
     switch (e.key) {
       case "r":

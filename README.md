@@ -28,8 +28,11 @@ Controls:
 
 ## How to make this into a different game
 
-* add new tiles into tilesList in index.html
-* add new actors in game.js as new classes. also add them to `allActorTypes`
+* new tiles:
+  * add into `tilesList` in index.html
+* new actors:
+  * add to game.js as new classes
+  * add the constructors to the end of `allActorTypes`
   * serializing/deserializing should Just Work if the only props are an x,y position. if you need anything else, copy paste and edit the default
   `serialize` and `deserialize` functions from the base Actor class
 
