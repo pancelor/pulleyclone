@@ -15,9 +15,8 @@ function initHistory() {
   gameHistory = []
 }
 
-function recordPosition(a) {
-  if (currentEpoch.buffer.some(([aExisting, pos])=>aExisting===a)) { return } // only record the earliest pos per epoch
-  currentEpoch.buffer.push([a, a.pos.clone()])
+function recordChange(delta) {
+  currentEpoch.buffer.push(delta)
 }
 
 function startEpoch() {
@@ -27,15 +26,72 @@ function startEpoch() {
 }
 function midEpoch() {
   // call this after the player cedes control but before gravity happens
-  currentEpoch.half1 = currentEpoch.buffer
+  currentEpoch.half1 = collateEpoch(currentEpoch.buffer)
   currentEpoch.buffer = []
 }
 function endEpoch() {
   // call this after gravity is over
-  currentEpoch.half2 = currentEpoch.buffer
+  currentEpoch.half2 = collateEpoch(currentEpoch.buffer)
   currentEpoch.buffer = []
   gameHistory.push(currentEpoch)
 }
+function collateEpoch(buffer) {
+  // collates records with the same id together; see testCollateEpoch
+  const seen = new Map()
+  const res = []
+  const resIndex = 0
+  for (const delta of buffer) {
+    const id = delta.id
+    let ix
+    if (seen.has(id)) {
+      ix = seen.get(id)
+      assert(res[ix].id === delta.id, "id mismatch")
+      res[ix].before = {
+        ...delta.before,
+        ...res[ix].before, // the pre-existing delta takes precedence
+      }
+      res[ix].after = {
+        ...res[ix].after,
+        ...delta.after, // now the new delta takes precedence
+      }
+    } else {
+      ix = res.length
+      res.push(delta)
+      seen.set(id, ix)
+    }
+  }
+  return res
+}
+function testCollateEpoch1() {
+  const buffer = [
+    {id: 1, before: { x: 1 }, after: { x: 2 }},
+    {id: 2, unrelatedStuff: true},
+    {id: 1, before: { x: 2 }, after: { x: 3 }},
+  ]
+  const newBuffer = collateEpoch(buffer)
+  assert(newBuffer.length === 2)
+  assertObjMatch(newBuffer[0], {id: 1, before: { x: 1 }, after: { x: 3 }})
+  assertObjMatch(newBuffer[1], {id: 2, unrelatedStuff: true})
+} testCollateEpoch1()
+function testCollateEpoch2() {
+  const buffer = [
+    {id: 1, before: { x: 1 }, after: { x: 2 }},
+    {id: 1, before: { y: 10 }, after: { y: 11 }},
+  ]
+  const newBuffer = collateEpoch(buffer)
+  assert(newBuffer.length === 1)
+  assertObjMatch(newBuffer[0], {id: 1, before: { x: 1, y: 10 }, after: { x: 2, y: 11 }})
+} testCollateEpoch2()
+function testCollateEpoch3() {
+  const buffer = [
+    {id: 1, before: { x: 1 }, after: { x: 2 }},
+    {id: 1, before: { x: 2, y: 10 }, after: { x: 3, y: 11 }},
+  ]
+  const newBuffer = collateEpoch(buffer)
+  assert(newBuffer.length === 1)
+  assertObjMatch(newBuffer[0], {id: 1, before: { x: 1, y: 10 }, after: { x: 3, y: 11 }})
+} testCollateEpoch3()
+
 function printEpoch(e) {
   console.log("epoch");
   console.log(epochHalfToString(e.half1));
@@ -52,11 +108,16 @@ function epochHalfToString(half) {
 function undo() {
   if (gameHistory.length === 0) { return }
   const { half1, half2 } = gameHistory.pop()
-  for (const [a, pos] of half2) {
-    a.pos = pos
-  }
-  for (const [a, pos] of half1) {
-    a.pos = pos
+  for (const { id, before, after } of [...half2, ...half1]) {
+    const a = getActorId(id)
+    for (const prop of Object.keys(after)) {
+      if ([TilePos, CanvasPos].includes(a[prop].constructor)) { // TODO: hacky
+        assert(a[prop].equals(after[prop]), `undo error on ${a.serialize()} on prop ${prop}`)
+      } else {
+        assertEqual(a[prop], after[prop], `undo error on ${a.serialize()} on prop ${prop}`)
+      }
+    }
+    Object.assign(a, before)
   }
   light().shine()
 }
@@ -334,10 +395,16 @@ function posDir(p, dir, len=1) {
 //
 
 class Actor {
+  static id = 1
+
   constructor(pos) {
     this.pos = pos
     this.img = this.constructor.img
     this.dead = false
+
+    // get id
+    this.id = Actor.id
+    Actor.id += 1
   }
 
   draw(ctx){
@@ -361,8 +428,21 @@ class Actor {
     return false
   }
 
+  kill() {
+    recordChange({
+      id: this.id,
+      before: { dead: this.dead },
+      after: { dead: true },
+    })
+    this.dead = true
+  }
+
   setPos(p) {
-    recordPosition(this)
+    recordChange({
+      id: this.id,
+      before: { pos: this.pos.clone() },
+      after: { pos: p.clone() },
+    })
     this.pos = p
   }
 
@@ -684,7 +764,7 @@ class Light extends Actor {
 
       // kill blocks
       const block = findActor(Block, nextPos)
-      if (block) { block.dead = true }
+      if (block) { block.kill() }
 
       const mirror = findActor(Mirror, nextPos)
       const gem = findActor(Gem, nextPos)
@@ -736,13 +816,13 @@ class Grass extends Actor {
   }
 
   initGame(ctx) {
-    console.log("choosing grass");
     this.img = choose([imgGrass1, imgGrass2, imgGrass3, imgGrass4, imgGrass5])
   }
 }
 
 const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator, Mirror, Light, Win, Grass]
 
+// common code for many different actors that want to do gravity similarly
 function fallableDoGravity(that, collidables) {
   const p = that.pos
   const pUnder = posDir(that.pos, 3)
@@ -760,6 +840,7 @@ function fallableDoGravity(that, collidables) {
   return true
 }
 
+// common code for many different actors that want to be pushed similarly
 function pushableUpdate(that, dir, collidables) {
   const pCurr = that.pos
   const pNext = posDir(pCurr, dir)
@@ -816,6 +897,10 @@ function allActorsExcept(cst) {
   } else {
     return actors.filter(a=>a.constructor!==cst)
   }
+}
+
+function getActorId(id) {
+  return actors.find(a=>a.id===id)
 }
 
 function findActor(cst, p) {

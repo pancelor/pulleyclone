@@ -57,10 +57,59 @@ assert(saneMod(-6, 10) === 4)
 
 function assert(b, msg=null) {
   if (!b) {
-    msg = (msg !== null) ? msg : "assert error"
+    msg = (msg === null) ? "assert error" : msg
     throw new Error(msg)
   }
 }
+
+function assertEqual(actual, expected, msg=null) {
+  if (actual !== expected) {
+    const expl = `expected ${expected}; got ${actual}`
+    msg = (msg === null) ? expl : `${msg}: ${expl}`
+    throw new Error(msg)
+  }
+}
+
+function expectError(cb, msgMatch='') {
+  try {
+    cb()
+  } catch (err) {
+    if (err.message.match(msgMatch)) {
+      return
+    } else {
+      throw err
+    }
+  }
+  throw new Error("expected an error; got none")
+}
+
+function assertObjMatch(actual, expected, _path="") {
+  for (const prop of Object.keys(expected)) {
+    const pathToProp = `${_path}.${prop}`
+    if (expected[prop].constructor === Object) {
+      assert(actual[prop].constructor === Object, `${pathToProp}: expected ${expected[prop]}; got ${actual[prop]}`)
+      assertObjMatch(actual[prop], expected[prop], _path=pathToProp)
+    } else {
+      assert(actual[prop] === expected[prop], `${pathToProp}: expected ${expected[prop]}; got ${actual[prop]}`)
+    }
+  }
+}
+assertObjMatch({id: 1}, {id: 1})
+assertObjMatch({a: 1, b: 2}, {a: 1, b: 2})
+assertObjMatch({id: 1, extras: "are allowed"}, {id: 1})
+expectError(() => {
+  assertObjMatch({id: 1}, {id: 2})
+}, /expected.*got/)
+expectError(() => {
+  assertObjMatch({}, {id: 2})
+}, /expected.*got/)
+expectError(() => {
+  assertObjMatch({a: 1, b: 3}, {a: 1, b: 2})
+}, /expected.*got/)
+assertObjMatch({foo: {bar: 1}}, {foo: {bar: 1}})
+expectError(() => {
+  assertObjMatch({foo: {bar: 1}}, {foo: {bar: 2}})
+}, /expected.*got/)
 
 // function assertLite(b, msg=null) {
 //   if (!b) {
