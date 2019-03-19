@@ -60,10 +60,15 @@ function registerListeners() {
         loadActors()
         await initGame()
       } break
-      case "z":
-      case "Z": {
+      case "z": {
         if (!isPlayerTurn) { return }
         undo()
+        raf()
+        return
+      } break
+      case "Z": {
+        if (!isPlayerTurn) { return }
+        redo()
         raf()
         return
       } break
@@ -74,13 +79,16 @@ function registerListeners() {
       case "Tab": {
         if (editorActive()) {
           switchLayer()
+          raf()
         }
       } break
       case "Alt": {
         suppressBrushPreview = true
+        raf()
       } break
       case "Shift": {
         suppressBrushPreview = true
+        raf()
       } break
     }
     e.preventDefault()
@@ -107,6 +115,7 @@ function registerListeners() {
       } break
       case "Alt": {
         suppressBrushPreview = false
+        raf()
       } break
       case "Shift": {
         suppressBrushPreview = false
@@ -114,6 +123,7 @@ function registerListeners() {
           mouseHeld = false
           actorInFlight = null
         }
+        raf()
       } break
     }
     if (dir === undefined) { return }

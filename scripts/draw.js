@@ -45,16 +45,17 @@ function drawCircle(ctx, p, r) {
 function drawMessage(ctx, msg) {
   const W = canvas.width;
   const H = canvas.height;
-  ctxWith(ctx, {globalAlpha: 0.66}, () => {
-    ctx.fillStyle = "white";
+  ctxWith(ctx, {globalAlpha: 0.66, fillStyle: "white"}, () => {
     fillRectCentered(ctx, W/2, H/2, W*0.9 + 10, H*0.1 + 10)
-    ctx.fillStyle = "#8873a3";
+  })
+  ctxWith(ctx, {globalAlpha: 0.75, fillStyle: "#0094FF"}, () => {
     fillRectCentered(ctx, W/2, H/2, W*0.9, H*0.1)
   })
-  ctx.font = "30px Comic Sans MS";
-  ctx.fillStyle = "white";
-  ctx.textAlign = "center";
-  ctx.fillText(msg, W/2, H/2 + 10);
+  ctxWith(ctx, {
+    font: "30px Comic Sans MS",
+    fillStyle: "white",
+    textAlign: "center",
+  }, () => { ctx.fillText(msg, W/2, H/2 + 10) });
 }
 
 function fillRectCentered(ctx, cx, cy, w, h) {

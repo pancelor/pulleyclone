@@ -35,11 +35,14 @@ option 2: clone project; open index.html; play in browser
   * this makes editing possible on github
 * rethink collision stuff; currently very adhoc. tiles and actors both.
 
+* better z-order - WireV is too high atm
+* on-gameinit events for objects - this is why Light + Win doesn't show up in level editor right now (i think?)
 * undo for .dead changes
 * undo for sprite changes
+* redo
+* sounds
 * less hacky actor placing - currently it's essentially just another tile layer :/
   * layer of blocks in bottom room is one too short because of this
-* sounds
 * make game run on a frame clock
   * do pull-style keyboard instead of event interrupts... bah
 

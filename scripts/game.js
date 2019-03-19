@@ -60,7 +60,10 @@ function undo() {
   }
   light().shine()
 }
-
+function redo() {
+  // TODO: need to store more info in the epochs to make redo possible
+  undo()
+}
 
 //
 // main game
@@ -71,10 +74,15 @@ async function initGame() {
   pairElevators()
   initHistory()
   await doGravity()
+  gameWon = false
 }
 
+let gameWon
+function winGame() {
+  gameWon = true
+}
 function checkWin() {
-  return false;
+  return gameWon;
 }
 
 async function update(dir) {
@@ -193,6 +201,7 @@ function drawTiles(ctx) {
       const name = tiles[rr][cc]
       if (name === "erase") { continue; }
       const img = document.getElementById(name)
+      if (img === null) { continue; }
       const pos = new TilePos({x: cc, y: rr})
       drawImg(ctx, img, pos)
     }
@@ -252,7 +261,7 @@ class Pos {
     return new this.constructor({x: this.x, y: this.y})
   }
 
-  str() {
+  serialize() {
     return `${this.constructor.name}(${this.x}, ${this.y})`
   }
 }
@@ -468,7 +477,9 @@ class Gem extends Actor {
 
   update(dir) {
     assert(dir === 0 || dir === 2)
-    return pushableUpdate(this, dir, [Block, Mirror, Gem, Wheel, Hero])
+    const res = pushableUpdate(this, dir, [Block, Mirror, Gem, Wheel, Hero])
+    if (findActor(Win, this.pos)) { winGame() }
+    return res
   }
 
   doGravity() {
@@ -639,32 +650,42 @@ class Light extends Actor {
   shine() {
     // TODO: reflect in the gem
 
-    let dir = 0
-    let pos = this.pos.clone()
-    let nextPos
-    this.path = [pos]
-    while (true) {
-      nextPos = posDir(pos, dir)
+    const seenReflectors = new Set() // don't want to get an infinite loop
+    this.path = []
+    const queue = []
+    queue.push({ pos: this.pos.clone(), dir: 0 })
+    while (queue.length > 0) {
+      let {pos, dir} = queue.pop()
 
       // stop at dirt or oob
-      if (getTile(nextPos) === "dirt" || !inbounds(nextPos)) {
-        break
+      if (getTile(pos) === "dirt" || !inbounds(pos)) {
+        continue
       }
+
+      this.path.push(pos)
+      const nextPos = posDir(pos, dir)
 
       // kill blocks
       const block = findActor(Block, nextPos)
       if (block) { block.dead = true }
 
-      // reflect
       const mirror = findActor(Mirror, nextPos)
-      if (mirror) {
+      const gem = findActor(Gem, nextPos)
+      if (mirror) {// reflect on mirror
+        if (seenReflectors.has(mirror)) { continue }
+        seenReflectors.add(mirror)
         const nextDir = mirror.bounceDir(dir)
-        if (nextDir === null) { break }
-        dir = nextDir
+        if (nextDir === null) { continue }
+        queue.push({ pos: nextPos, dir: nextDir })
+      } else if (gem) { // reflect on gem
+        if (seenReflectors.has(gem)) { continue }
+        seenReflectors.add(gem)
+        queue.push({ pos: nextPos, dir: saneMod(dir+1, 4) })
+        queue.push({ pos: nextPos, dir: saneMod(dir-1, 4) })
+        queue.push({ pos: nextPos, dir })
+      } else { // go straight
+        queue.push({ pos: nextPos, dir })
       }
-
-      this.path.push(nextPos)
-      pos = nextPos
     }
   }
 
@@ -678,7 +699,34 @@ class Light extends Actor {
   }
 }
 
-const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator, Mirror, Light]
+class Win extends Actor {
+  static img = imgWin
+
+  constructor(p) {
+    super(p)
+    this.img = erase
+  }
+}
+
+class Grass extends Actor {
+  static img = imgGrassPlaceholder
+  // purely decorative
+  constructor(p) {
+    super(p)
+    this.randImg = choose([imgGrass1, imgGrass2, imgGrass3, imgGrass4, imgGrass5])
+  }
+
+  draw(ctx) {
+    if (editorActive()) {
+      this.img = Grass.img
+    } else {
+      this.img = this.randImg
+    }
+    Actor.prototype.draw.call(this, ctx)
+  }
+}
+
+const allActorTypes = [Hero, Block, Gem, Wheel, WireH, WireV, Elevator, Mirror, Light, Win, Grass]
 
 function fallableDoGravity(that, collidables) {
   const p = that.pos

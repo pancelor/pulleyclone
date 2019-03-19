@@ -111,10 +111,10 @@ function drawBrush(ctx) {
 }
 
 function drawEditor(ctx) {
-  let globalAlpha
-
   ctxWith(ctx, {fillStyle: "gray"}, cls)
+  ctxWith(ctx, {globalAlpha: 0.75}, drawBkg)
 
+  let globalAlpha
   globalAlpha = (editorLayer === LAYER_TILE) ? 1 : 0.6
   ctxWith(ctx, {globalAlpha}, drawTiles)
 

@@ -28,6 +28,10 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max-min)) + min;
 }
 
+function choose(arr) {
+  return arr[randInt(0, arr.length)]
+}
+
 function clamp(x, a, b) {
   if (x < a) { return a }
   if (x > b) { return b }
