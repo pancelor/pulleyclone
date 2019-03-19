@@ -21,6 +21,7 @@ async function initGame() {
 let gameWon
 function winGame() {
   gameWon = true
+  TextSplash.singleton.set("You win!", "#0094FF")
 }
 function checkWin() {
   return gameWon;
@@ -160,15 +161,12 @@ function drawActorPlaceholders(ctx) {
 function drawGame(ctx) {
   // const offset = getCameraOffset()
   // ctx.translate(offset.x, offset.y)
-  drawBkg(ctx);
+  drawBkg(ctx)
   light().draw(ctx)
-  drawTilesCached(ctx);
-  drawActors(ctx);
+  drawTilesCached(ctx)
+  drawActors(ctx)
+  TextSplash.singleton.draw(ctx)
   // ctx.translate(-offset.x, -offset.y)
-
-  if (checkWin()) {
-    drawMessage(ctx, "You win!", "#0094FF")
-  }
 }
 
 function pointRectCollision(p, rect) {
@@ -367,6 +365,19 @@ class Actor {
 
 class Hero extends Actor {
   static img = imgHeroR
+
+  initGame() {
+    this.tut = new Tutorial()
+  }
+
+  setPos(p) {
+    Actor.prototype.setPos.call(this, p) // super
+    for (const dir of [0, 2]) {
+      const beside = posDir(this.pos, dir)
+      if (findActor(Block, beside)) { this.tut.seeBlock() }
+      if (findActor(Mirror, beside)) { this.tut.seeMirror() }
+    }
+  }
 
   update(dir) {
     const dx = dir === 0 || dir === 2
@@ -750,6 +761,57 @@ function pairElevators() {
   es.forEach(e=>e.pair=null)
   es.forEach(e=>e.tryPair())
 }
+
+class Tutorial {
+  constructor() {
+    this.seenMirror = false
+    this.seenBlock = false
+  }
+
+  seeMirror() {
+    if (this.seenMirror) { return }
+    this.seenMirror = true
+    TextSplash.singleton.set([
+      "A massive angled mirror,",
+      "sloping towards the cave floor",
+    ])
+  }
+
+  seeBlock() {
+    if (this.seenBlock) { return }
+    this.seenBlock = true
+    TextSplash.singleton.set([
+      "A large stone block with an",
+      "engraved image of the sun",
+    ])
+  }
+}
+
+class TextSplash {
+  constructor() {
+    this.closed = true
+  }
+
+  set(msg, color="black") {
+    this.msg = msg
+    this.color = color
+
+    this.closed = false
+  }
+
+  close() {
+    // returns whether it changed to closed
+    const wasClosedAlready = this.closed
+    this.closed = true
+    return !wasClosedAlready
+  }
+
+  draw(ctx) {
+    if (this.closed) { return }
+    drawMessage(ctx, this.msg, this.color)
+  }
+}
+TextSplash.singleton = new TextSplash()
 
 //
 // helpers

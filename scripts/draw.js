@@ -42,20 +42,35 @@ function drawCircle(ctx, p, r) {
   ctx.fill()
 }
 
-function drawMessage(ctx, msg, mainColor="black") {
+function drawMessage(ctx, lines, mainColor="black") {
+  if (!Array.isArray(lines)) { lines = [lines] }
   const W = canvas.width;
   const H = canvas.height;
+  const lineHeight = 30
+  const msgHeight = lineHeight*lines.length
   ctxWith(ctx, {globalAlpha: 0.66, fillStyle: "white"}, () => {
-    fillRectCentered(ctx, W/2, H/2, W*0.9 + 10, H*0.1 + 10)
+    fillRectCentered(ctx, W/2, H/2, W*0.9 + 10, msgHeight + lineHeight + 10)
   })
   ctxWith(ctx, {globalAlpha: 0.75, fillStyle: mainColor}, () => {
-    fillRectCentered(ctx, W/2, H/2, W*0.9, H*0.1)
+    fillRectCentered(ctx, W/2, H/2, W*0.9, msgHeight + lineHeight)
   })
   ctxWith(ctx, {
-    font: "30px Comic Sans MS",
+    font: `${lineHeight}px Consolas`,
     fillStyle: "white",
     textAlign: "center",
-  }, () => { ctx.fillText(msg, W/2, H/2 + 10) });
+  }, () => {
+    let i = 0
+    for (const line of lines) {
+      const yCenter = H/2 - msgHeight/2 + (i+0.5)*lineHeight
+      ctx.fillText(line, W/2, yCenter+lineHeight*0.25)
+      i += 1
+    }
+  });
+  // // draw crosshairs
+  // ctxWith(ctx, {fillStyle: "red"}, () => {
+  //   fillRectCentered(ctx, W/2, H/2, W, H*0.005)
+  //   fillRectCentered(ctx, W/2, H/2, W*0.005, H)
+  // })
 }
 
 function fillRectCentered(ctx, cx, cy, w, h) {
