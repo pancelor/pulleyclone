@@ -3,12 +3,20 @@ function initEditor() {
   buildBrushSelect()
 }
 
-async function toggleEditor() {
-  if (editorActive()) {
+function setEditor(on) {
+  if (on) {
+    editor.style.display = null
+  } else {
     editor.style.display = "none"
+  }
+}
+
+async function toggleEditorGameMode() {
+  if (editorActive()) {
+    setEditor(false)
     await initGame()
   } else {
-    editor.style.display = null
+    setEditor(true)
   }
 }
 
@@ -119,7 +127,7 @@ function drawEditor(ctx) {
   ctxWith(ctx, {globalAlpha}, drawTiles)
 
   globalAlpha = (editorLayer === LAYER_ACTOR) ? 1 : 0.6
-  ctxWith(ctx, {globalAlpha}, drawActors)
+  ctxWith(ctx, {globalAlpha}, drawActorPlaceholders)
 
   ctxWith(ctx, {globalAlpha: 0.75, strokeStyle: "gray"}, drawGrid)
 

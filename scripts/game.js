@@ -73,6 +73,7 @@ async function initGame() {
   await initTileCache()
   pairElevators()
   initHistory()
+  actors.forEach(a=>a.initGame())
   await doGravity()
   gameWon = false
 }
@@ -209,7 +210,11 @@ function drawTiles(ctx) {
 }
 
 function drawActors(ctx) {
-  allActorsExcept(Light).forEach(e=>e.draw(ctx));
+  allActorsExcept(Light).forEach(e=>e.draw(ctx))
+}
+
+function drawActorPlaceholders(ctx) {
+  actors.forEach(a=> drawImg(ctx, a.imgPlaceholder(), a.pos))
 }
 
 function drawGame(ctx) {
@@ -222,7 +227,7 @@ function drawGame(ctx) {
   // ctx.translate(-offset.x, -offset.y)
 
   if (checkWin()) {
-    drawMessage(ctx, "You win!")
+    drawMessage(ctx, "You win!", "#0094FF")
   }
 }
 
@@ -341,6 +346,11 @@ class Actor {
     }
   }
 
+  imgPlaceholder() {
+    // for use by the level editor
+    return this.constructor.img
+  }
+
   fiddle() {
     // rotate through various possible states in the level editor
     return
@@ -354,6 +364,10 @@ class Actor {
   setPos(p) {
     recordPosition(this)
     this.pos = p
+  }
+
+  initGame() {
+    // code that runs on game init
   }
 
   doGravity() {
@@ -599,6 +613,10 @@ class Mirror extends Actor {
     this.setImgFromRot()
   }
 
+  imgPlaceholder() {
+    return this.img
+  }
+
   setImgFromRot() {
     switch (this.rot) {
       case 0: { this.img = imgMirrorUR } break
@@ -642,8 +660,7 @@ class Mirror extends Actor {
 class Light extends Actor {
   static img = imgLight3
 
-  constructor(p) {
-    super(p)
+  initGame() {
     this.shine()
   }
 
@@ -704,25 +721,23 @@ class Win extends Actor {
 
   constructor(p) {
     super(p)
-    this.img = erase
   }
+
+  draw(ctx) {}
 }
 
 class Grass extends Actor {
+  // a purely decorative object
+
   static img = imgGrassPlaceholder
-  // purely decorative
+
   constructor(p) {
     super(p)
-    this.randImg = choose([imgGrass1, imgGrass2, imgGrass3, imgGrass4, imgGrass5])
   }
 
-  draw(ctx) {
-    if (editorActive()) {
-      this.img = Grass.img
-    } else {
-      this.img = this.randImg
-    }
-    Actor.prototype.draw.call(this, ctx)
+  initGame(ctx) {
+    console.log("choosing grass");
+    this.img = choose([imgGrass1, imgGrass2, imgGrass3, imgGrass4, imgGrass5])
   }
 }
 

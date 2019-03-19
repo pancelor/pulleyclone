@@ -37,8 +37,10 @@ function registerListeners() {
     return false
   })
   window.addEventListener("wheel", (e) => {
-    cycleBrush(-Math.sign(e.wheelDelta))
-    raf()
+    if (editorActive()) {
+      cycleBrush(-Math.sign(e.wheelDelta))
+      raf()
+    }
     e.preventDefault()
     return false
   })
@@ -73,7 +75,7 @@ function registerListeners() {
         return
       } break
       case "Escape": {
-        await toggleEditor()
+        await toggleEditorGameMode()
         raf()
       } break
       case "Tab": {
@@ -168,7 +170,7 @@ function registerListeners() {
     return false
   })
 
-  editorButton.onclick = () => { toggleEditor(); raf() }
+  editorButton.onclick = async () => { await toggleEditorGameMode(); raf() }
   saveButton.onclick = saveLevel
   addColButton.onclick = ()=>modifyTilesDim(1, 0)
   rmColButton.onclick = ()=>modifyTilesDim(-1, 0)
@@ -254,8 +256,8 @@ async function reset() {
   loadActors()
 
   initEditor()
+  setEditor(false) // start with editor off
   await initGame()
-  toggleEditor() // start with editor off
 
   isPlayerTurn = true;
   bufferedInput = null;

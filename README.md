@@ -11,6 +11,10 @@ option 1: play online at https://pancelor.github.io/pulleyclone/
 
 option 2: clone project; open index.html; play in browser
 
+Controls:
+* move with wasd or arrow keys.
+* undo with z
+
 ## How to use the level editor
 
 * escape: toggles between the game and the editor
@@ -36,7 +40,6 @@ option 2: clone project; open index.html; play in browser
 * rethink collision stuff; currently very adhoc. tiles and actors both.
 
 * better z-order - WireV is too high atm
-* on-gameinit events for objects - this is why Light + Win doesn't show up in level editor right now (i think?)
 * undo for .dead changes
 * undo for sprite changes
 * redo

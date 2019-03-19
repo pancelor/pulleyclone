@@ -42,13 +42,13 @@ function drawCircle(ctx, p, r) {
   ctx.fill()
 }
 
-function drawMessage(ctx, msg) {
+function drawMessage(ctx, msg, mainColor="black") {
   const W = canvas.width;
   const H = canvas.height;
   ctxWith(ctx, {globalAlpha: 0.66, fillStyle: "white"}, () => {
     fillRectCentered(ctx, W/2, H/2, W*0.9 + 10, H*0.1 + 10)
   })
-  ctxWith(ctx, {globalAlpha: 0.75, fillStyle: "#0094FF"}, () => {
+  ctxWith(ctx, {globalAlpha: 0.75, fillStyle: mainColor}, () => {
     fillRectCentered(ctx, W/2, H/2, W*0.9, H*0.1)
   })
   ctxWith(ctx, {
