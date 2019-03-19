@@ -13,7 +13,7 @@ option 2: clone project; open index.html; play in browser
 
 Controls:
 * move with wasd or arrow keys.
-* undo with z
+* undo with z, redo with shift-z
 
 ## How to use the level editor
 
@@ -40,9 +40,6 @@ Controls:
 * rethink collision stuff; currently very adhoc. tiles and actors both.
 
 * better z-order - WireV is too high atm
-* undo for .dead changes
-* undo for sprite changes
-* redo
 * sounds
 * less hacky actor placing - currently it's essentially just another tile layer :/
   * layer of blocks in bottom room is one too short because of this

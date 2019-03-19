@@ -3,6 +3,7 @@
 //
 
 let gameHistory;
+let historyCursor;
 let currentEpoch;
 
 //
@@ -11,6 +12,7 @@ let currentEpoch;
 
 function initHistory() {
   gameHistory = []
+  historyCursor = 0
 }
 
 function recordChange(delta) {
@@ -22,17 +24,25 @@ function startEpoch() {
   currentEpoch = {}
   currentEpoch.buffer = []
 }
+
 function midEpoch() {
   // call this after the player cedes control but before gravity happens
   currentEpoch.half1 = collateEpoch(currentEpoch.buffer)
   currentEpoch.buffer = []
 }
+
 function endEpoch() {
   // call this after gravity is over
   currentEpoch.half2 = collateEpoch(currentEpoch.buffer)
-  currentEpoch.buffer = []
+  delete currentEpoch.buffer
+
+  if (currentEpoch.half1.length === 0 && currentEpoch.half2.length === 0) { return }
+
+  gameHistory.length = historyCursor
   gameHistory.push(currentEpoch)
+  historyCursor += 1
 }
+
 function collateEpoch(buffer) {
   // collates records with the same id together; see testCollateEpoch
   const seen = new Map()
@@ -60,6 +70,7 @@ function collateEpoch(buffer) {
   }
   return res
 }
+
 function testCollateEpoch1() {
   const buffer = [
     {id: 1, before: { x: 1 }, after: { x: 2 }},
@@ -71,6 +82,7 @@ function testCollateEpoch1() {
   assertObjMatch(newBuffer[0], {id: 1, before: { x: 1 }, after: { x: 3 }})
   assertObjMatch(newBuffer[1], {id: 2, unrelatedStuff: true})
 } testCollateEpoch1()
+
 function testCollateEpoch2() {
   const buffer = [
     {id: 1, before: { x: 1 }, after: { x: 2 }},
@@ -80,6 +92,7 @@ function testCollateEpoch2() {
   assert(newBuffer.length === 1)
   assertObjMatch(newBuffer[0], {id: 1, before: { x: 1, y: 10 }, after: { x: 2, y: 11 }})
 } testCollateEpoch2()
+
 function testCollateEpoch3() {
   const buffer = [
     {id: 1, before: { x: 1 }, after: { x: 2 }},
@@ -90,22 +103,30 @@ function testCollateEpoch3() {
   assertObjMatch(newBuffer[0], {id: 1, before: { x: 1, y: 10 }, after: { x: 3, y: 11 }})
 } testCollateEpoch3()
 
-function printEpoch(e) {
-  console.log("epoch");
-  console.log(epochHalfToString(e.half1));
-  console.log(epochHalfToString(e.half2));
-}
-function epochHalfToString(half) {
+function historyToString(join=true) {
+  // returns a yaml-ish string; made for human debugging purposes
   const lines = []
-  lines.push("  half")
-  for (const [a, pos] of half) {
-    lines.push(`    ${a.constructor.name}: ${pos.str()}`)
+  for (const e of gameHistory) {
+    lines.push(`* half 1:`)
+    lines.push(...epochHalfToString(e.half1, false));
+    lines.push(`  half 2:`)
+    lines.push(...epochHalfToString(e.half2, false));
   }
-  return lines.join('\n')
+  return join ? lines.join('\n') : lines
 }
+
+function epochHalfToString(half, join=true) {
+  const lines = []
+  for (const {id, before, after} of half) {
+    lines.push(`    #${id}: ${JSON.stringify(before)} -> ${JSON.stringify(after)}`)
+  }
+  return join ? lines.join('\n') : lines
+}
+
 function undo() {
-  if (gameHistory.length === 0) { return }
-  const { half1, half2 } = gameHistory.pop()
+  if (historyCursor <= 0) { return }
+  historyCursor -= 1
+  const { half1, half2 } = gameHistory[historyCursor]
   for (const { id, before, after } of [...half2, ...half1]) {
     const a = getActorId(id)
     for (const prop of Object.keys(after)) {
@@ -119,7 +140,21 @@ function undo() {
   }
   light().shine()
 }
+
 function redo() {
-  // TODO: need to store more info in the epochs to make redo possible
-  undo()
+  if (historyCursor >= gameHistory.length) { return }
+  const { half1, half2 } = gameHistory[historyCursor]
+  historyCursor += 1
+  for (const { id, before, after } of [...half1, ...half2]) {
+    const a = getActorId(id)
+    for (const prop of Object.keys(before)) {
+      if ([TilePos, CanvasPos].includes(a[prop].constructor)) { // TODO: hacky
+        assert(a[prop].equals(before[prop]), `redo error on ${a.serialize()} on prop ${prop}: expected ${before[prop].serialize()}; got ${a[prop].serialize()}`)
+      } else {
+        assertEqual(a[prop], before[prop], `redo error on ${a.serialize()} on prop ${prop}`)
+      }
+    }
+    Object.assign(a, after)
+  }
+  light().shine()
 }

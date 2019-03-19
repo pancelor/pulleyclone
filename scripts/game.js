@@ -325,6 +325,15 @@ class Actor {
     this.pos = p
   }
 
+  setImg(newImg) {
+    recordChange({
+      id: this.id,
+      before: { img: this.img },
+      after: { img: newImg },
+    })
+    this.img = newImg
+  }
+
   initGame() {
     // code that runs on game init
   }
@@ -368,14 +377,14 @@ class Hero extends Actor {
     const tCurr = getTile(pCurr)
     const tNext = getTile(pNext)
 
-    if (dir === 0) { this.img = imgHeroR }
-    if (dir === 2) { this.img = imgHeroL }
+    if (dir === 0) { this.setImg(imgHeroR) }
+    if (dir === 2) { this.setImg(imgHeroL) }
 
     if (!inbounds(pNext)) { return false }
     if (tNext === "dirt") { return false }
 
     // actor collision / pushing
-    const collidables = [Block, Mirror, Gem, Wheel]
+    const collidables = [Block, Mirror, Gem]
     const coll = findActor(collidables, pNext)
     if (coll) {
       if (dy) { return false }
@@ -389,18 +398,18 @@ class Hero extends Actor {
     // ladders
     if (dir === 3 && tNext === "ladderPlatform") {
       this.setPos(pNext)
-      this.img = imgHeroClimb
+      this.setImg(imgHeroClimb)
       return true
     }
     if (dy && tCurr === "ladderPlatform") {
       this.setPos(pNext)
-      this.img = imgHeroClimb
+      this.setImg(imgHeroClimb)
       return true
     }
     if (dy && tCurr === "ladder") {
       if (dir === 3 && tNext === "platform") { return false }
       this.setPos(pNext)
-      this.img = imgHeroClimb
+      this.setImg(imgHeroClimb)
       return true
     }
 
