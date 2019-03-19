@@ -568,9 +568,9 @@ class Elevator extends Actor {
     const abovePairCargo = findActor([Wheel, Mirror, Gem], posDir(this.pair.pos, 1, 2))
 
     if (cargo && aboveCargo && dir === 1) { return false }
-    if (cargo && belowCargo && dir === 3) { return false }
+    if (belowCargo && dir === 3) { return false }
     if (pairCargo && abovePairCargo && pairDir === 1) { return false }
-    if (pairCargo && belowPairCargo && pairDir === 3) { return false }
+    if (belowPairCargo && pairDir === 3) { return false }
 
     const posNext = posDir(this.pos, dir)
     const pairPosNext = posDir(this.pair.pos, pairDir)
