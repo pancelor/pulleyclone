@@ -13,7 +13,7 @@ option 2: clone project; open index.html; play in browser
 
 Controls:
 * move with wasd or arrow keys.
-* undo with z, redo with shift-z
+* undo with `z`, redo with `y`
 
 ## How to use the level editor
 

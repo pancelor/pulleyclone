@@ -388,11 +388,11 @@ class Hero extends Actor {
     const tCurr = getTile(pCurr)
     const tNext = getTile(pNext)
 
-    if (dir === 0) { this.setImg(imgHeroR) }
-    if (dir === 2) { this.setImg(imgHeroL) }
-
     if (!inbounds(pNext)) { return false }
     if (tNext === "dirt") { return false }
+
+    if (dir === 0) { this.setImg(imgHeroR) }
+    if (dir === 2) { this.setImg(imgHeroL) }
 
     // actor collision / pushing
     const collidables = [Block, Mirror, Gem]
@@ -437,9 +437,6 @@ class Hero extends Actor {
 
     // move horizontally
     if (dx) {
-      if (tNext === "ladder" || tNext === "ladderPlatform") {
-        this.setImg(imgHeroClimb)
-      }
       this.setPos(pNext)
       return true
     }

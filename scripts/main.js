@@ -24,36 +24,79 @@ function combo(str) {
     })
   }
 }
-const allowedKeyCombos = [
-  combo("ctrl l"),
-  combo("ctrl r"),
-  combo("ctrl shift r"),
-  combo("ctrl shift j"),
-]
 
-function registerListeners() {
-  window.addEventListener("contextmenu", (e) => {
-    e.preventDefault()
-    return false
-  })
-  window.addEventListener("wheel", (e) => {
-    if (editorActive()) {
-      cycleBrush(-Math.sign(e.wheelDelta))
-      raf()
-    }
-    e.preventDefault()
-    return false
-  })
 
-  window.addEventListener("keydown", async (e) => {
-    if (allowedKeyCombos.some(f=>f(e))) {
-      // don't preventDefault on whitelisted key combos
+function registerKeyListeners() {
+  async function movementKey(dir) {
+    if (editorActive()) { return }
+
+    // This function gets all weird b/c it's running multiple copies
+    // of itself at once. One main "thread" plays back any buffered inputs
+    // while many other "threads" set the buffered input
+    if (!isPlayerTurn) {
+      bufferedInput = dir
       return
     }
+    isPlayerTurn = false
+    await update(dir)
+    assert(isPlayerTurn === false)
+    while (bufferedInput !== null) {
+      const dir = bufferedInput
+      bufferedInput = null
+      await update(dir)
+    }
+    isPlayerTurn = true
+  }
+
+  const keyRepeatTimeout = 125
+
+  function makeHandler(codes, cb) {
+    let repeatInterval
+    if (!Array.isArray(codes)) { codes = [codes] }
+    return e => {
+      if (!codes.includes(e.code)) { return }
+      if (e.type === "keydown") {
+        if (e.repeat) { return }
+        cb()
+        clearInterval(repeatInterval) // don't want multiple intervals running if we lose focus
+        repeatInterval = setInterval(cb, keyRepeatTimeout)
+      } else if (e.type === "keyup") {
+        if (!repeatInterval) {
+          console.warn(`released ${e.code} but there was no repeat interval (${repeat})`)
+        }
+        clearTimeout(repeatInterval)
+      } else { assert(0, `${e.type}: ${JSON.stringify(e)}`) }
+    }
+  }
+  const repeatHandlers = [
+    makeHandler("KeyZ", () => {
+      if (!isPlayerTurn) { return }
+      undo()
+      raf()
+    }),
+    makeHandler("KeyY", () => {
+      if (!isPlayerTurn) { return }
+      redo()
+      raf()
+    }),
+    makeHandler(["KeyD", "ArrowRight"], () => { movementKey(0) }),
+    makeHandler(["KeyW", "ArrowUp"], () => { movementKey(1) }),
+    makeHandler(["KeyA", "ArrowLeft"], () => { movementKey(2) }),
+    makeHandler(["KeyS", "ArrowDown"], () => { movementKey(3) }),
+  ]
+
+  window.addEventListener("keydown", e=>repeatHandlers.forEach(f=>f(e)))
+  window.addEventListener("keyup", e=>repeatHandlers.forEach(f=>f(e)))
+
+  window.addEventListener("keydown", async (e) => {
     if (combo("ctrl s")(e)) {
       saveLevel()
       e.preventDefault()
       return false
+    }
+    if (e.ctrlKey) {
+      // don't preventDefault on keyboard shortcuts
+      return
     }
 
     if (TextSplash.singleton.maybeClose()) { raf() }
@@ -64,18 +107,6 @@ function registerListeners() {
         if (editorActive()) { return }
         loadActors()
         await initGame()
-      } break
-      case "z": {
-        if (!isPlayerTurn) { return }
-        undo()
-        raf()
-        return
-      } break
-      case "Z": {
-        if (!isPlayerTurn) { return }
-        redo()
-        raf()
-        return
       } break
       case "Escape": {
         await toggleEditorGameMode()
@@ -100,24 +131,7 @@ function registerListeners() {
     return false
   })
   window.addEventListener("keyup", async (e) => {
-    let dir;
     switch (e.key) {
-      case "d":
-      case "ArrowRight": {
-        dir = 0;
-      } break
-      case "w":
-      case "ArrowUp": {
-        dir = 1;
-      } break
-      case "a":
-      case "ArrowLeft": {
-        dir = 2;
-      } break
-      case "s":
-      case "ArrowDown": {
-        dir = 3;
-      } break
       case "Alt": {
         suppressBrushPreview = false
         raf()
@@ -131,25 +145,21 @@ function registerListeners() {
         raf()
       } break
     }
-    if (dir === undefined) { return }
-    if (editorActive()) { return }
+  })
+}
 
-    // This function gets all weird b/c it's running multiple copies
-    // of itself at once. One main "thread" plays back any buffered inputs
-    // while many other "threads" set the buffered input
-    if (!isPlayerTurn) {
-      bufferedInput = dir
-      return
+function registerMouseListeners() {
+  window.addEventListener("contextmenu", (e) => {
+    e.preventDefault()
+    return false
+  })
+  window.addEventListener("wheel", (e) => {
+    if (editorActive()) {
+      cycleBrush(-Math.sign(e.wheelDelta))
+      raf()
     }
-    isPlayerTurn = false
-    await update(dir)
-    assert(isPlayerTurn === false)
-    while (bufferedInput !== null) {
-      const dir = bufferedInput
-      bufferedInput = null
-      await update(dir)
-    }
-    isPlayerTurn = true
+    e.preventDefault()
+    return false
   })
 
   canvas.addEventListener("mousemove", (e) => {
@@ -247,7 +257,8 @@ function raf() {
 
 async function init() {
   initSerTables()
-  registerListeners()
+  registerKeyListeners()
+  registerMouseListeners()
   mousepos = new CanvasPos({x: null, y: null});
   await reset()
 }

@@ -74,7 +74,6 @@ const actorData = `
   WireV 5 15
   WireV 5 16
   WireV 5 17
-  WireV 9 17
   WireV 9 16
   WireV 13 16
   WireV 13 17
@@ -94,8 +93,6 @@ const actorData = `
   Elevator 15 12
   Elevator 2 12
   Elevator 5 18
-  Elevator 9 18
-  Elevator 13 21
   Mirror 8 6 2
   Mirror 7 8 1
   Mirror 4 17 3
@@ -121,4 +118,8 @@ const actorData = `
   Grass 2 5
   Grass 1 5
   Grass 0 5
+  WireV 13 21
+  Elevator 9 17
+  Elevator 13 22
+  Block 9 18
 `
