@@ -1,8 +1,8 @@
 # You're Pulleying My Leg
 
-A clone of http://www.draknek.org/games/puzzlescript/pulleys.php
+A clone of http://www.draknek.org/games/puzzlescript/pulleys.php , made as a learning exercise.
 
-Also featuring an original custom level editor
+Also has an original custom level editor
 
 ## How to run
 
